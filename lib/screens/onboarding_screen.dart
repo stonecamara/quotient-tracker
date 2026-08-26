@@ -64,10 +64,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
         .map((c) => CurvedAnimation(parent: c, curve: Curves.easeOut))
         .toList();
     _slideAnims = _fadeControllers
-        .map((c) => Tween<Offset>(
-              begin: const Offset(0, 0.15),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: c, curve: Curves.easeOutCubic)))
+        .map(
+          (c) => Tween<Offset>(
+            begin: const Offset(0, 0.15),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: c, curve: Curves.easeOutCubic)),
+        )
         .toList();
 
     // Animer la première page
@@ -199,7 +201,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 28, vertical: 14),
+                              horizontal: 28,
+                              vertical: 14,
+                            ),
                             decoration: BoxDecoration(
                               color: AppColors.cyan,
                               borderRadius: BorderRadius.circular(16),
@@ -570,7 +574,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     ),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 18),
+                      horizontal: 20,
+                      vertical: 18,
+                    ),
                   ),
                 ),
               ),
@@ -618,9 +624,7 @@ class _AnimatedFeatureCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.2),
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

@@ -32,9 +32,10 @@ class _ActivityCardState extends State<ActivityCard>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _popScale = Tween<double>(begin: 1.0, end: 0.85).animate(
-      CurvedAnimation(parent: _popAnim, curve: Curves.easeInOut),
-    );
+    _popScale = Tween<double>(
+      begin: 1.0,
+      end: 0.85,
+    ).animate(CurvedAnimation(parent: _popAnim, curve: Curves.easeInOut));
   }
 
   @override
@@ -50,28 +51,44 @@ class _ActivityCardState extends State<ActivityCard>
 
   IconData _getActivityIcon() {
     final name = widget.activity.name.toLowerCase();
-    if (name.contains('sport') || name.contains('exercice') || name.contains('gym')) {
+    if (name.contains('sport') ||
+        name.contains('exercice') ||
+        name.contains('gym')) {
       return Icons.fitness_center;
     }
-    if (name.contains('lecture') || name.contains('lire') || name.contains('livre')) {
+    if (name.contains('lecture') ||
+        name.contains('lire') ||
+        name.contains('livre')) {
       return Icons.menu_book_rounded;
     }
-    if (name.contains('méditation') || name.contains('yoga') || name.contains('zen')) {
+    if (name.contains('méditation') ||
+        name.contains('yoga') ||
+        name.contains('zen')) {
       return Icons.self_improvement;
     }
-    if (name.contains('manger') || name.contains('repas') || name.contains('cuisine')) {
+    if (name.contains('manger') ||
+        name.contains('repas') ||
+        name.contains('cuisine')) {
       return Icons.restaurant_rounded;
     }
-    if (name.contains('dormir') || name.contains('coucher') || name.contains('sommeil')) {
+    if (name.contains('dormir') ||
+        name.contains('coucher') ||
+        name.contains('sommeil')) {
       return Icons.bedtime_rounded;
     }
-    if (name.contains('travail') || name.contains('bureau') || name.contains('code')) {
+    if (name.contains('travail') ||
+        name.contains('bureau') ||
+        name.contains('code')) {
       return Icons.laptop_mac_rounded;
     }
-    if (name.contains('course') || name.contains('achat') || name.contains('magasin')) {
+    if (name.contains('course') ||
+        name.contains('achat') ||
+        name.contains('magasin')) {
       return Icons.shopping_cart_rounded;
     }
-    if (name.contains('marche') || name.contains('promenade') || name.contains('run')) {
+    if (name.contains('marche') ||
+        name.contains('promenade') ||
+        name.contains('run')) {
       return Icons.directions_run;
     }
     return Icons.star_rounded;
@@ -144,7 +161,9 @@ class _ActivityCardState extends State<ActivityCard>
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
-                              decoration: completed ? TextDecoration.lineThrough : null,
+                              decoration: completed
+                                  ? TextDecoration.lineThrough
+                                  : null,
                               color: completed
                                   ? AppColors.textMuted
                                   : AppColors.textPrimary,
@@ -163,7 +182,9 @@ class _ActivityCardState extends State<ActivityCard>
                               style: TextStyle(
                                 fontSize: 13,
                                 color: AppColors.textMuted,
-                                decoration: completed ? TextDecoration.lineThrough : null,
+                                decoration: completed
+                                    ? TextDecoration.lineThrough
+                                    : null,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
@@ -194,7 +215,9 @@ class _ActivityCardState extends State<ActivityCard>
                   Icon(
                     Icons.access_time_rounded,
                     size: 12,
-                    color: completed ? AppColors.success : AppColors.textSecondary,
+                    color: completed
+                        ? AppColors.success
+                        : AppColors.textSecondary,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -202,7 +225,9 @@ class _ActivityCardState extends State<ActivityCard>
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
-                      color: completed ? AppColors.success : AppColors.textSecondary,
+                      color: completed
+                          ? AppColors.success
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ],

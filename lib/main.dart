@@ -13,24 +13,24 @@ import 'theme/app_colors.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.bgDark,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: AppColors.bgDark,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+  );
 
   await StorageService.init();
   await NotificationService.init();
 
   final settings = Hive.box('settings');
-  final onboardingDone = settings.get('onboardingDone', defaultValue: false) as bool;
+  final onboardingDone =
+      settings.get('onboardingDone', defaultValue: false) as bool;
   final savedLocale = settings.get('appLocale', defaultValue: 'fr') as String;
 
-  runApp(MyApp(
-    showOnboarding: !onboardingDone,
-    initialLocale: savedLocale,
-  ));
+  runApp(MyApp(showOnboarding: !onboardingDone, initialLocale: savedLocale));
 }
 
 class MyApp extends StatelessWidget {
@@ -48,7 +48,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ActivityProvider()),
-        ChangeNotifierProvider(create: (_) => LocaleService()..setLocale(initialLocale)),
+        ChangeNotifierProvider(
+          create: (_) => LocaleService()..setLocale(initialLocale),
+        ),
       ],
       child: Consumer<LocaleService>(
         builder: (context, localeService, _) {

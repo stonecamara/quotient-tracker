@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -29,7 +28,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final provider = context.read<ActivityProvider>();
       await provider.loadActivities();
       if (granted && mounted) {
-        await NotificationService.rescheduleAllNotifications(provider.activities);
+        await NotificationService.rescheduleAllNotifications(
+          provider.activities,
+        );
       }
     });
   }
@@ -72,7 +73,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  t.greeting(Hive.box('settings').get('userName', defaultValue: '')),
+                                  t.greeting(
+                                    Hive.box(
+                                      'settings',
+                                    ).get('userName', defaultValue: ''),
+                                  ),
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -98,31 +103,41 @@ class _HomeScreenState extends State<HomeScreen> {
                                   onTap: () async {
                                     await NotificationService.showTestNotification();
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(t.notificationTest),
                                           backgroundColor: AppColors.bgCard,
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                           ),
                                         ),
                                       );
                                     }
                                   },
                                 ),
-                                if (defaultTargetPlatform == TargetPlatform.android) ...[
+                                if (defaultTargetPlatform ==
+                                    TargetPlatform.android) ...[
                                   const SizedBox(width: 10),
                                   _CircleButton(
                                     icon: Icons.battery_saver_outlined,
                                     onTap: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(
                                           content: Text(t.batteryHint),
                                           backgroundColor: AppColors.bgCard,
                                           behavior: SnackBarBehavior.floating,
                                           shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(12)),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
                                           duration: const Duration(seconds: 5),
                                         ),
                                       );
@@ -171,13 +186,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                         const AddActivityScreen(),
                                     transitionsBuilder: (a, anim, b, child) {
                                       return SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, 0.3),
-                                          end: Offset.zero,
-                                        ).animate(CurvedAnimation(
-                                          parent: anim,
-                                          curve: Curves.easeOutCubic,
-                                        )),
+                                        position:
+                                            Tween<Offset>(
+                                              begin: const Offset(0, 0.3),
+                                              end: Offset.zero,
+                                            ).animate(
+                                              CurvedAnimation(
+                                                parent: anim,
+                                                curve: Curves.easeOutCubic,
+                                              ),
+                                            ),
                                         child: FadeTransition(
                                           opacity: anim,
                                           child: child,
@@ -189,13 +207,17 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 8),
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.cyan,
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.cyan.withValues(alpha: 0.3),
+                                      color: AppColors.cyan.withValues(
+                                        alpha: 0.3,
+                                      ),
                                       blurRadius: 12,
                                       offset: const Offset(0, 4),
                                     ),
@@ -204,7 +226,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.add, color: Colors.white, size: 18),
+                                    const Icon(
+                                      Icons.add,
+                                      color: Colors.white,
+                                      size: 18,
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       t.addTask,
@@ -272,7 +298,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: AppColors.bgCard,
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: AppColors.cyan.withValues(alpha: 0.15),
+                                    color: AppColors.cyan.withValues(
+                                      alpha: 0.15,
+                                    ),
                                     width: 2,
                                   ),
                                 ),
@@ -305,50 +333,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   else
                     SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final activity = provider.todayActivities[index];
-                          return StaggeredAnimation(
-                            index: index,
-                            delay: const Duration(milliseconds: 50),
-                            duration: const Duration(milliseconds: 450),
-                            child: ActivityCard(
-                              activity: activity,
-                              onToggle: () {
-                                provider.toggleActivityCompletion(activity.id);
-                              },
-                              onDelete: () {
-                                _showDeleteDialog(context, provider, activity.id);
-                              },
-                              onEdit: () {
-                                Navigator.push(
-                                  context,
-                                  PageRouteBuilder(
-                                    pageBuilder: (a, b, c) =>
-                                        AddActivityScreen(activity: activity),
-                                    transitionsBuilder: (a, anim, b, child) {
-                                      return SlideTransition(
-                                        position: Tween<Offset>(
-                                          begin: const Offset(0, 0.3),
-                                          end: Offset.zero,
-                                        ).animate(CurvedAnimation(
-                                          parent: anim,
-                                          curve: Curves.easeOutCubic,
-                                        )),
-                                        child: FadeTransition(
-                                          opacity: anim,
-                                          child: child,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                        childCount: provider.todayActivities.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final activity = provider.todayActivities[index];
+                        return StaggeredAnimation(
+                          index: index,
+                          delay: const Duration(milliseconds: 50),
+                          duration: const Duration(milliseconds: 450),
+                          child: ActivityCard(
+                            activity: activity,
+                            onToggle: () {
+                              provider.toggleActivityCompletion(activity.id);
+                            },
+                            onDelete: () {
+                              _showDeleteDialog(context, provider, activity.id);
+                            },
+                            onEdit: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder: (a, b, c) =>
+                                      AddActivityScreen(activity: activity),
+                                  transitionsBuilder: (a, anim, b, child) {
+                                    return SlideTransition(
+                                      position:
+                                          Tween<Offset>(
+                                            begin: const Offset(0, 0.3),
+                                            end: Offset.zero,
+                                          ).animate(
+                                            CurvedAnimation(
+                                              parent: anim,
+                                              curve: Curves.easeOutCubic,
+                                            ),
+                                          ),
+                                      child: FadeTransition(
+                                        opacity: anim,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      }, childCount: provider.todayActivities.length),
                     ),
 
                   const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -379,13 +407,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   pageBuilder: (a, b, c) => const AddActivityScreen(),
                   transitionsBuilder: (a, anim, b, child) {
                     return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0, 0.3),
-                        end: Offset.zero,
-                      ).animate(CurvedAnimation(
-                        parent: anim,
-                        curve: Curves.easeOutCubic,
-                      )),
+                      position:
+                          Tween<Offset>(
+                            begin: const Offset(0, 0.3),
+                            end: Offset.zero,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: anim,
+                              curve: Curves.easeOutCubic,
+                            ),
+                          ),
                       child: FadeTransition(opacity: anim, child: child),
                     );
                   },
@@ -402,7 +433,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showDeleteDialog(
-      BuildContext context, ActivityProvider provider, String activityId) {
+    BuildContext context,
+    ActivityProvider provider,
+    String activityId,
+  ) {
     final t = AppLocalizations.of(context);
     showGeneralDialog(
       context: context,
@@ -429,7 +463,10 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(t.cancel, style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              t.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -461,10 +498,7 @@ class _CircleButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           shape: BoxShape.circle,
-          border: Border.all(
-            color: AppColors.bgCardLight,
-            width: 1,
-          ),
+          border: Border.all(color: AppColors.bgCardLight, width: 1),
         ),
         child: Icon(icon, color: AppColors.textSecondary, size: 20),
       ),
@@ -494,10 +528,7 @@ class _StatPill extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: color.withValues(alpha: 0.2),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
         ),
         child: Column(
           children: [
@@ -514,10 +545,7 @@ class _StatPill extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppColors.textMuted,
-              ),
+              style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
             ),
           ],
         ),
