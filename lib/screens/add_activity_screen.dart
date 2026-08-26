@@ -373,35 +373,41 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   }
 
   Future<void> _saveActivity() async {
-    if (_formKey.currentState!.validate()) {
-      final provider = context.read<ActivityProvider>();
-
-      if (isEditing) {
-        final updated = widget.activity!.copyWith(
-          name: _nameController.text,
-          description: _descriptionController.text.isNotEmpty
-              ? _descriptionController.text
-              : null,
-          hour: _selectedHour,
-          minute: _selectedMinute,
-          weeklyDays: _selectedDays,
-        );
-        await provider.updateActivity(updated);
-      } else {
-        final newActivity = Activity.create(
-          name: _nameController.text,
-          description: _descriptionController.text.isNotEmpty
-              ? _descriptionController.text
-              : null,
-          hour: _selectedHour,
-          minute: _selectedMinute,
-          weeklyDays: _selectedDays,
-        );
-        await provider.addActivity(newActivity);
-      }
-
-      if (mounted) Navigator.pop(context);
+    if (!_formKey.currentState!.validate()) return;
+    if (!_selectedDays.contains(true)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Sélectionnez au moins un jour.')),
+      );
+      return;
     }
+
+    final provider = context.read<ActivityProvider>();
+
+    if (isEditing) {
+      final updated = widget.activity!.copyWith(
+        name: _nameController.text,
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : null,
+        hour: _selectedHour,
+        minute: _selectedMinute,
+        weeklyDays: _selectedDays,
+      );
+      await provider.updateActivity(updated);
+    } else {
+      final newActivity = Activity.create(
+        name: _nameController.text,
+        description: _descriptionController.text.isNotEmpty
+            ? _descriptionController.text
+            : null,
+        hour: _selectedHour,
+        minute: _selectedMinute,
+        weeklyDays: _selectedDays,
+      );
+      await provider.addActivity(newActivity);
+    }
+
+    if (mounted) Navigator.pop(context);
   }
 
   void _deleteActivity() {

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -22,8 +23,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ActivityProvider>().loadActivities();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final granted = await NotificationService.requestPermissions();
+      if (!mounted) return;
+      final provider = context.read<ActivityProvider>();
+      await provider.loadActivities();
+      if (granted && mounted) {
+        await NotificationService.rescheduleAllNotifications(provider.activities);
+      }
     });
   }
 
@@ -104,7 +111,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     }
                                   },
                                 ),
-                                if (Platform.isAndroid) ...[
+                                if (defaultTargetPlatform == TargetPlatform.android) ...[
                                   const SizedBox(width: 10),
                                   _CircleButton(
                                     icon: Icons.battery_saver_outlined,
