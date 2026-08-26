@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/activity.dart';
+import '../services/app_translations.dart';
 import '../theme/app_colors.dart';
 
 class ActivityCard extends StatefulWidget {
@@ -20,256 +21,228 @@ class ActivityCard extends StatefulWidget {
   State<ActivityCard> createState() => _ActivityCardState();
 }
 
-class _ActivityCardState extends State<ActivityCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _popAnim;
-  late Animation<double> _popScale;
+class _ActivityCardState extends State<ActivityCard> {
+  bool _pressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _popAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
-    _popScale = Tween<double>(
-      begin: 1.0,
-      end: 0.85,
-    ).animate(CurvedAnimation(parent: _popAnim, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _popAnim.dispose();
-    super.dispose();
-  }
-
-  void _handleToggle() {
-    _popAnim.forward().then((_) => _popAnim.reverse());
-    widget.onToggle();
-  }
-
-  IconData _getActivityIcon() {
-    final name = widget.activity.name.toLowerCase();
-    if (name.contains('sport') ||
-        name.contains('exercice') ||
-        name.contains('gym')) {
-      return Icons.fitness_center;
+  IconData _activityIcon(String name) {
+    final value = name.toLowerCase();
+    if (value.contains('sport') ||
+        value.contains('gym') ||
+        value.contains('exercice')) {
+      return Icons.fitness_center_rounded;
     }
-    if (name.contains('lecture') ||
-        name.contains('lire') ||
-        name.contains('livre')) {
+    if (value.contains('lecture') ||
+        value.contains('lire') ||
+        value.contains('livre')) {
       return Icons.menu_book_rounded;
     }
-    if (name.contains('méditation') ||
-        name.contains('yoga') ||
-        name.contains('zen')) {
-      return Icons.self_improvement;
+    if (value.contains('course') ||
+        value.contains('achat') ||
+        value.contains('magasin')) {
+      return Icons.shopping_bag_rounded;
     }
-    if (name.contains('manger') ||
-        name.contains('repas') ||
-        name.contains('cuisine')) {
+    if (value.contains('travail') ||
+        value.contains('code') ||
+        value.contains('bureau')) {
+      return Icons.work_outline_rounded;
+    }
+    if (value.contains('cuisine') ||
+        value.contains('repas') ||
+        value.contains('manger')) {
       return Icons.restaurant_rounded;
     }
-    if (name.contains('dormir') ||
-        name.contains('coucher') ||
-        name.contains('sommeil')) {
-      return Icons.bedtime_rounded;
+    return Icons.auto_awesome_rounded;
+  }
+
+  Color _iconBackground(String name) {
+    final value = name.toLowerCase();
+    if (value.contains('sport') || value.contains('gym')) {
+      return AppColors.pastelBlue;
     }
-    if (name.contains('travail') ||
-        name.contains('bureau') ||
-        name.contains('code')) {
-      return Icons.laptop_mac_rounded;
+    if (value.contains('course') || value.contains('achat')) {
+      return AppColors.pastelOrange;
     }
-    if (name.contains('course') ||
-        name.contains('achat') ||
-        name.contains('magasin')) {
-      return Icons.shopping_cart_rounded;
+    if (value.contains('travail') || value.contains('code')) {
+      return AppColors.pastelPink;
     }
-    if (name.contains('marche') ||
-        name.contains('promenade') ||
-        name.contains('run')) {
-      return Icons.directions_run;
+    return AppColors.purpleSoft;
+  }
+
+  Color _iconColor(String name) {
+    final value = name.toLowerCase();
+    if (value.contains('sport') || value.contains('gym')) {
+      return const Color(0xFF269CE8);
     }
-    return Icons.star_rounded;
+    if (value.contains('course') || value.contains('achat')) {
+      return const Color(0xFFE89A3D);
+    }
+    if (value.contains('travail') || value.contains('code')) {
+      return const Color(0xFFE676A0);
+    }
+    return AppColors.purple;
   }
 
   @override
   Widget build(BuildContext context) {
-    final completed = widget.activity.isCompletedToday;
+    final t = AppLocalizations.of(context);
+    final activity = widget.activity;
+    final completed = activity.isCompletedToday;
+    final iconColor = _iconColor(activity.name);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.cardColor(completed),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: completed
-                ? AppColors.success.withValues(alpha: 0.3)
-                : AppColors.bgCardLight.withValues(alpha: 0.5),
-            width: 1,
+      padding: const EdgeInsets.fromLTRB(20, 6, 20, 6),
+      child: AnimatedScale(
+        scale: _pressed ? .98 : 1,
+        duration: const Duration(milliseconds: 120),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(14, 14, 10, 14),
+          decoration: BoxDecoration(
+            color: AppColors.bgCard,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0D24184A),
+                blurRadius: 18,
+                offset: Offset(0, 7),
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: completed
-                  ? AppColors.success.withValues(alpha: 0.1)
-                  : Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            // ── Zone cliquable pour éditer (icône + texte) ──
-            Expanded(
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
+          child: Row(
+            children: [
+              GestureDetector(
                 onTap: widget.onEdit,
-                child: Row(
-                  children: [
-                    // ── Icône d'activité ──
-                    Container(
-                      width: 48,
-                      height: 48,
-                      decoration: BoxDecoration(
-                        color: completed
-                            ? AppColors.success.withValues(alpha: 0.15)
-                            : AppColors.cyan.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        _getActivityIcon(),
-                        color: completed ? AppColors.success : AppColors.cyan,
-                        size: 24,
-                      ),
-                    ),
-
-                    const SizedBox(width: 14),
-
-                    // ── Nom + description ──
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AnimatedDefaultTextStyle(
-                            duration: const Duration(milliseconds: 300),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              decoration: completed
-                                  ? TextDecoration.lineThrough
-                                  : null,
-                              color: completed
-                                  ? AppColors.textMuted
-                                  : AppColors.textPrimary,
-                            ),
-                            child: Text(
-                              widget.activity.name,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          if (widget.activity.description != null &&
-                              widget.activity.description!.isNotEmpty) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              widget.activity.description!,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textMuted,
-                                decoration: completed
-                                    ? TextDecoration.lineThrough
-                                    : null,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  ],
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _iconBackground(activity.name),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Icon(
+                    _activityIcon(activity.name),
+                    color: iconColor,
+                    size: 23,
+                  ),
                 ),
               ),
-            ),
-
-            const SizedBox(width: 10),
-
-            // ── Heure ──
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: completed
-                    ? AppColors.success.withValues(alpha: 0.12)
-                    : AppColors.bgCardLight.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.access_time_rounded,
-                    size: 12,
-                    color: completed
-                        ? AppColors.success
-                        : AppColors.textSecondary,
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: widget.onEdit,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        activity.description?.isNotEmpty == true
+                            ? activity.description!
+                            : (t.isFrench
+                                  ? 'Activité quotidienne'
+                                  : 'Daily activity'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        activity.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: completed
+                              ? AppColors.textMuted
+                              : AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          decoration: completed
+                              ? TextDecoration.lineThrough
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.schedule_rounded,
+                            size: 13,
+                            color: iconColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            activity.scheduledTimeFormatted,
+                            style: TextStyle(
+                              color: iconColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Text(
-                    widget.activity.scheduledTimeFormatted,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color: completed
-                          ? AppColors.success
-                          : AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  PopupMenuButton<String>(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(
+                      Icons.more_horiz_rounded,
+                      color: AppColors.textMuted,
+                      size: 20,
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') widget.onEdit();
+                      if (value == 'delete') widget.onDelete();
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(value: 'edit', child: Text(t.editTask)),
+                      PopupMenuItem(value: 'delete', child: Text(t.delete)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTapDown: (_) => setState(() => _pressed = true),
+                    onTapCancel: () => setState(() => _pressed = false),
+                    onTap: () {
+                      setState(() => _pressed = false);
+                      widget.onToggle();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: completed
+                            ? AppColors.bgCardCompleted
+                            : AppColors.pastelBlue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        completed
+                            ? (t.isFrench ? 'Fait' : 'Done')
+                            : (t.isFrench ? 'À faire' : 'To-do'),
+                        style: TextStyle(
+                          color: completed
+                              ? AppColors.success
+                              : const Color(0xFF3498D6),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-
-            const SizedBox(width: 10),
-
-            // ── Bouton cocher (toujours visible !) ──
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: _handleToggle,
-              child: ScaleTransition(
-                scale: _popScale,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: completed ? AppColors.cyan : Colors.transparent,
-                    border: Border.all(
-                      color: completed ? AppColors.cyan : AppColors.textMuted,
-                      width: 2,
-                    ),
-                    boxShadow: completed
-                        ? [
-                            BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.4),
-                              blurRadius: 10,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: completed
-                      ? const Icon(Icons.check, color: Colors.white, size: 22)
-                      : null,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -51,7 +51,13 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(color: AppColors.bgDark),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [AppColors.bgDark, Color(0xFFF2FAFF)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: SafeArea(
           child: Column(
             children: [

@@ -16,9 +16,9 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: AppColors.bgDark,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 
@@ -60,11 +60,11 @@ class MyApp extends StatelessWidget {
               title: 'Quotient',
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
-                brightness: Brightness.dark,
+                brightness: Brightness.light,
                 scaffoldBackgroundColor: AppColors.bgDark,
-                colorScheme: const ColorScheme.dark(
-                  primary: AppColors.cyan,
-                  secondary: AppColors.cyanDark,
+                colorScheme: const ColorScheme.light(
+                  primary: AppColors.purple,
+                  secondary: AppColors.purpleDark,
                   surface: AppColors.bgCard,
                 ),
                 useMaterial3: true,
