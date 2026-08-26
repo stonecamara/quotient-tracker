@@ -5,6 +5,7 @@ import '../models/activity.dart';
 import '../services/activity_provider.dart';
 import '../services/app_translations.dart';
 import '../services/notification_service.dart';
+import '../services/locale_service.dart';
 import '../theme/app_colors.dart';
 import '../widgets/activity_card.dart';
 import '../widgets/quotient_indicator.dart';
@@ -20,6 +21,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _filter = 'all';
   int _selectedNav = 0;
+  int _selectedDateIndex = 2;
   late final ScrollController _scrollController;
 
   @override
@@ -98,46 +100,14 @@ class _HomeScreenState extends State<HomeScreen> {
             return CustomScrollView(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(child: _buildHeader(userName, t)),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                    child: QuotientIndicator(
-                      onViewTasks: () => _scrollController.animateTo(
-                        280,
-                        duration: const Duration(milliseconds: 450),
-                        curve: Curves.easeOutCubic,
-                      ),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: _buildSectionHeader(
-                    t,
-                    provider.todayActivities.length,
-                  ),
-                ),
-                SliverToBoxAdapter(child: _buildDateStrip(dates, t)),
-                SliverToBoxAdapter(child: _buildFilters(t)),
-                if (activities.isEmpty)
-                  SliverToBoxAdapter(child: _buildEmptyState(t))
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final activity = activities[index];
-                      return ActivityCard(
-                        activity: activity,
-                        onToggle: () =>
-                            provider.toggleActivityCompletion(activity.id),
-                        onDelete: () =>
-                            _showDeleteDialog(context, provider, activity.id),
-                        onEdit: () => _openEditActivity(activity),
-                      );
-                    }, childCount: activities.length),
-                  ),
-                const SliverToBoxAdapter(child: SizedBox(height: 112)),
-              ],
+              slivers: _buildSlivers(
+                context,
+                provider,
+                t,
+                userName,
+                dates,
+                activities,
+              ),
             );
           },
         ),
@@ -155,27 +125,472 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  List<Widget> _buildSlivers(
+    BuildContext context,
+    ActivityProvider provider,
+    AppLocalizations t,
+    String userName,
+    List<DateTime> dates,
+    List<Activity> activities,
+  ) {
+    if (_selectedNav == 1) {
+      return _buildCalendarSlivers(context, provider, t, userName, dates);
+    }
+    if (_selectedNav == 2) {
+      return _buildProgressSlivers(context, provider, t, userName);
+    }
+    if (_selectedNav == 3) {
+      return _buildProfileSlivers(context, provider, t, userName);
+    }
+
+    return [
+      SliverToBoxAdapter(child: _buildHeader(userName, t)),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: QuotientIndicator(
+            onViewTasks: () => _scrollController.animateTo(
+              280,
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutCubic,
+            ),
+          ),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: _buildSectionHeader(t, provider.todayActivities.length),
+      ),
+      SliverToBoxAdapter(child: _buildDateStrip(dates, t)),
+      SliverToBoxAdapter(child: _buildFilters(t)),
+      if (activities.isEmpty)
+        SliverToBoxAdapter(child: _buildEmptyState(t))
+      else
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final activity = activities[index];
+            return ActivityCard(
+              activity: activity,
+              onToggle: () => provider.toggleActivityCompletion(activity.id),
+              onDelete: () => _showDeleteDialog(context, provider, activity.id),
+              onEdit: () => _openEditActivity(activity),
+            );
+          }, childCount: activities.length),
+        ),
+      const SliverToBoxAdapter(child: SizedBox(height: 112)),
+    ];
+  }
+
+  List<Widget> _buildCalendarSlivers(
+    BuildContext context,
+    ActivityProvider provider,
+    AppLocalizations t,
+    String userName,
+    List<DateTime> dates,
+  ) {
+    final activities = _selectedDateIndex == 2
+        ? provider.todayActivities
+        : <Activity>[];
+    return [
+      SliverToBoxAdapter(child: _buildHeader(userName, t)),
+      SliverToBoxAdapter(
+        child: _buildTabTitle(
+          t.isFrench ? 'Calendrier' : 'Calendar',
+          t.isFrench
+              ? 'Organisez vos habitudes sur la semaine.'
+              : 'Organize your habits across the week.',
+        ),
+      ),
+      SliverToBoxAdapter(child: _buildDateStrip(dates, t)),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
+          child: Text(
+            _selectedDateIndex == 2
+                ? (t.isFrench
+                      ? 'Tâches prévues aujourd’hui'
+                      : 'Tasks planned today')
+                : (t.isFrench
+                      ? 'Aucune tâche pour cette date'
+                      : 'No tasks for this date'),
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ),
+      if (activities.isEmpty)
+        SliverToBoxAdapter(child: _buildEmptyState(t))
+      else
+        SliverList(
+          delegate: SliverChildBuilderDelegate((context, index) {
+            final activity = activities[index];
+            return ActivityCard(
+              activity: activity,
+              onToggle: () => provider.toggleActivityCompletion(activity.id),
+              onDelete: () => _showDeleteDialog(context, provider, activity.id),
+              onEdit: () => _openEditActivity(activity),
+            );
+          }, childCount: activities.length),
+        ),
+      const SliverToBoxAdapter(child: SizedBox(height: 112)),
+    ];
+  }
+
+  List<Widget> _buildProgressSlivers(
+    BuildContext context,
+    ActivityProvider provider,
+    AppLocalizations t,
+    String userName,
+  ) {
+    return [
+      SliverToBoxAdapter(child: _buildHeader(userName, t)),
+      SliverToBoxAdapter(
+        child: _buildTabTitle(
+          t.isFrench ? 'Ma progression' : 'My progress',
+          t.isFrench
+              ? 'Un aperçu simple de vos habitudes du jour.'
+              : 'A simple overview of today’s habits.',
+        ),
+      ),
+      SliverToBoxAdapter(child: _buildProgressCard(provider, t)),
+      SliverToBoxAdapter(child: _buildWeekSummary(provider, t)),
+      const SliverToBoxAdapter(child: SizedBox(height: 112)),
+    ];
+  }
+
+  List<Widget> _buildProfileSlivers(
+    BuildContext context,
+    ActivityProvider provider,
+    AppLocalizations t,
+    String userName,
+  ) {
+    final localeService = context.read<LocaleService>();
+    return [
+      SliverToBoxAdapter(child: _buildHeader(userName, t)),
+      SliverToBoxAdapter(
+        child: _buildTabTitle(
+          t.isFrench ? 'Profil & réglages' : 'Profile & settings',
+          t.isFrench
+              ? 'Personnalisez votre expérience Quotient.'
+              : 'Personalize your Quotient experience.',
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D24184A),
+                  blurRadius: 18,
+                  offset: Offset(0, 7),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.language_rounded,
+                  title: t.isFrench ? 'Langue' : 'Language',
+                  subtitle: localeService.isFrench ? 'Français' : 'English',
+                  onTap: () => _showLanguageDialog(context, localeService),
+                ),
+                _SettingsTile(
+                  icon: Icons.notifications_active_outlined,
+                  title: t.isFrench ? 'Notifications' : 'Notifications',
+                  subtitle: t.isFrench
+                      ? 'Tester les rappels locaux'
+                      : 'Test local reminders',
+                  onTap: () => _testNotifications(context, t, provider),
+                ),
+                _SettingsTile(
+                  icon: Icons.info_outline_rounded,
+                  title: t.isFrench ? 'À propos de Quotient' : 'About Quotient',
+                  subtitle: 'v1.0.0',
+                  onTap: () => showAboutDialog(
+                    context: context,
+                    applicationName: 'Quotient',
+                    applicationVersion: '1.0.0',
+                    applicationIcon: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppColors.purple,
+                    ),
+                    children: [
+                      Text(
+                        t.isFrench
+                            ? 'Une routine simple pour avancer chaque jour.'
+                            : 'A simple routine to help you move forward every day.',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      const SliverToBoxAdapter(child: SizedBox(height: 112)),
+    ];
+  }
+
+  Widget _buildTabTitle(String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 25,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard(ActivityProvider provider, AppLocalizations t) {
+    final total = provider.todayActivities.length;
+    final done = provider.completedToday.length;
+    final progress = total == 0 ? 0.0 : done / total;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D24184A),
+              blurRadius: 18,
+              offset: Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    t.dailyQuotient,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                Text(
+                  '${provider.quotient}%',
+                  style: const TextStyle(
+                    color: AppColors.purple,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 10,
+                backgroundColor: AppColors.purpleSoft,
+                valueColor: const AlwaysStoppedAnimation<Color>(
+                  AppColors.purple,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '$done ${t.done.toLowerCase()}',
+                  style: const TextStyle(
+                    color: AppColors.success,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '$total ${t.total.toLowerCase()}',
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWeekSummary(ActivityProvider provider, AppLocalizations t) {
+    final values = [
+      provider.quotient * .35,
+      provider.quotient * .65,
+      provider.quotient.toDouble(),
+      provider.quotient * .55,
+      provider.quotient * .8,
+      provider.quotient * .42,
+      provider.quotient * .72,
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.purpleSoft,
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              t.isFrench ? 'Cette semaine' : 'This week',
+              style: const TextStyle(
+                color: AppColors.purpleDark,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              height: 92,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(
+                  7,
+                  (index) => Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 18,
+                        height: 68 * (values[index] / 100).clamp(.08, 1),
+                        decoration: BoxDecoration(
+                          color: index == 2
+                              ? AppColors.purple
+                              : AppColors.purple.withValues(alpha: .32),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        t.dayShort(index),
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 9,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _testNotifications(
+    BuildContext context,
+    AppLocalizations t,
+    ActivityProvider provider,
+  ) async {
+    final granted = await NotificationService.requestPermissions();
+    if (granted) {
+      await NotificationService.rescheduleAllNotifications(provider.activities);
+    }
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          granted
+              ? t.notificationTest
+              : (t.isFrench
+                    ? 'Permission de notification refusée'
+                    : 'Notification permission denied'),
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.textPrimary,
+      ),
+    );
+  }
+
+  Future<void> _showLanguageDialog(
+    BuildContext context,
+    LocaleService localeService,
+  ) async {
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(
+          localeService.isFrench ? 'Choisir la langue' : 'Choose language',
+        ),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'fr'),
+            child: const Text('Français'),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'en'),
+            child: const Text('English'),
+          ),
+        ],
+      ),
+    );
+    if (selected != null) await localeService.setLocale(selected);
+  }
+
   Widget _buildHeader(String userName, AppLocalizations t) {
     final displayName = userName.isEmpty ? 'Quotient' : userName;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF8E72F2), Color(0xFF5B2DE8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          GestureDetector(
+            onTap: () => setState(() => _selectedNav = 3),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [Color(0xFF8E72F2), Color(0xFF5B2DE8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: Colors.white,
-              size: 25,
+              child: const Icon(
+                Icons.person_rounded,
+                color: Colors.white,
+                size: 25,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -261,53 +676,63 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: dates.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final selected = index == 2;
+          final selected = index == _selectedDateIndex;
           final date = dates[index];
-          return Container(
-            width: 62,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: selected ? AppColors.purple : AppColors.bgCard,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: selected
-                  ? const [
-                      BoxShadow(
-                        color: AppColors.purpleGlow,
-                        blurRadius: 12,
-                        offset: Offset(0, 6),
-                      ),
-                    ]
-                  : const [],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  t.monthName(date.month).substring(0, 3),
-                  style: TextStyle(
-                    color: selected ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+          return GestureDetector(
+            onTap: () => setState(() {
+              _selectedDateIndex = index;
+              _selectedNav = 1;
+            }),
+            child: Container(
+              width: 62,
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.purple : AppColors.bgCard,
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: selected
+                    ? const [
+                        BoxShadow(
+                          color: AppColors.purpleGlow,
+                          blurRadius: 12,
+                          offset: Offset(0, 6),
+                        ),
+                      ]
+                    : const [],
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    t.monthName(date.month).substring(0, 3),
+                    style: TextStyle(
+                      color: selected
+                          ? Colors.white70
+                          : AppColors.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${date.day}',
-                  style: TextStyle(
-                    color: selected ? Colors.white : AppColors.textPrimary,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
+                  const SizedBox(height: 3),
+                  Text(
+                    '${date.day}',
+                    style: TextStyle(
+                      color: selected ? Colors.white : AppColors.textPrimary,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  t.dayShort(date.weekday - 1),
-                  style: TextStyle(
-                    color: selected ? Colors.white70 : AppColors.textSecondary,
-                    fontSize: 10,
+                  const SizedBox(height: 2),
+                  Text(
+                    t.dayShort(date.weekday - 1),
+                    style: TextStyle(
+                      color: selected
+                          ? Colors.white70
+                          : AppColors.textSecondary,
+                      fontSize: 10,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
@@ -484,6 +909,53 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(t.delete),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        width: 42,
+        height: 42,
+        decoration: const BoxDecoration(
+          color: AppColors.purpleSoft,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: AppColors.purple, size: 21),
+      ),
+      title: Text(
+        title,
+        style: const TextStyle(
+          color: AppColors.textPrimary,
+          fontSize: 14,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        color: AppColors.textMuted,
       ),
     );
   }
