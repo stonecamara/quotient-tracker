@@ -13,75 +13,84 @@ class StorageService {
     await Hive.openBox(_settingsBox);
   }
 
-  // Activities CRUD
   static Future<List<Activity>> getActivities() async {
-    final box = Hive.box(_activitiesBox);
     final activities = <Activity>[];
-    
+    final box = activitiesBox;
+
     for (var i = 0; i < box.length; i++) {
       final data = box.getAt(i);
-      if (data != null) {
+      if (data is! Map) continue;
+      try {
         activities.add(Activity.fromMap(Map<String, dynamic>.from(data)));
+      } on FormatException {
+        // Une entrée invalide ne doit pas empêcher les autres activités de se charger.
+      } on TypeError {
+        // Même comportement pour une ancienne structure de données incompatible.
       }
     }
-    
     return activities;
   }
 
   static Future<void> saveActivity(Activity activity) async {
-    final box = Hive.box(_activitiesBox);
-    await box.put(activity.id, activity.toMap());
+    await activitiesBox.put(activity.id, activity.toMap());
   }
 
   static Future<void> deleteActivity(String id) async {
-    final box = Hive.box(_activitiesBox);
-    await box.delete(id);
+    await activitiesBox.delete(id);
   }
 
-  static Future<void> updateActivityCompletion(String id, bool isCompleted) async {
-    final box = Hive.box(_activitiesBox);
-    final data = box.get(id);
-    if (data != null) {
+  static Future<void> updateActivityCompletion(
+    String id,
+    bool isCompleted,
+  ) async {
+    final data = activitiesBox.get(id);
+    if (data is Map) {
       final activity = Activity.fromMap(Map<String, dynamic>.from(data));
-      final updated = activity.copyWith(isCompletedToday: isCompleted);
-      await box.put(id, updated.toMap());
+      await activitiesBox.put(
+        id,
+        activity.copyWith(isCompletedToday: isCompleted).toMap(),
+      );
     }
   }
 
   static Future<void> resetDailyCompletions() async {
-    final box = Hive.box(_activitiesBox);
+    final box = activitiesBox;
     for (var i = 0; i < box.length; i++) {
       final data = box.getAt(i);
-      if (data != null) {
-        final activity = Activity.fromMap(Map<String, dynamic>.from(data));
-        final updated = activity.copyWith(isCompletedToday: false);
-        await box.putAt(i, updated.toMap());
+      if (data is Map) {
+        try {
+          final activity = Activity.fromMap(Map<String, dynamic>.from(data));
+          await box.putAt(
+            i,
+            activity.copyWith(isCompletedToday: false).toMap(),
+          );
+        } on FormatException {
+          // Conserver l’entrée invalide pour permettre une migration ultérieure.
+        } on TypeError {
+          // Conserver l’entrée invalide pour permettre une migration ultérieure.
+        }
       }
     }
   }
 
-  // Settings
   static Future<void> saveLastResetDate(DateTime date) async {
-    final box = Hive.box(_settingsBox);
-    await box.put('lastResetDate', date.toIso8601String());
+    await Hive.box(_settingsBox).put('lastResetDate', date.toIso8601String());
   }
 
   static Future<DateTime?> getLastResetDate() async {
-    final box = Hive.box(_settingsBox);
-    final dateStr = box.get('lastResetDate');
-    if (dateStr != null) {
-      return DateTime.parse(dateStr);
-    }
+    final dateStr = Hive.box(_settingsBox).get('lastResetDate');
+    if (dateStr is String) return DateTime.tryParse(dateStr);
     return null;
   }
 
   static Future<void> saveNotificationEnabled(bool enabled) async {
-    final box = Hive.box(_settingsBox);
-    await box.put('notificationsEnabled', enabled);
+    await Hive.box(_settingsBox).put('notificationsEnabled', enabled);
   }
 
   static Future<bool> getNotificationEnabled() async {
-    final box = Hive.box(_settingsBox);
-    return box.get('notificationsEnabled', defaultValue: true);
+    return Hive.box(
+          _settingsBox,
+        ).get('notificationsEnabled', defaultValue: true)
+        as bool;
   }
 }

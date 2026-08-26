@@ -5,171 +5,129 @@ import '../services/app_translations.dart';
 import '../theme/app_colors.dart';
 import 'animated_widgets.dart';
 
-class QuotientIndicator extends StatefulWidget {
-  const QuotientIndicator({super.key});
+class QuotientIndicator extends StatelessWidget {
+  final VoidCallback? onViewTasks;
 
-  @override
-  State<QuotientIndicator> createState() => _QuotientIndicatorState();
-}
-
-class _QuotientIndicatorState extends State<QuotientIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _glowController;
-
-  @override
-  void initState() {
-    super.initState();
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2500),
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _glowController.dispose();
-    super.dispose();
-  }
+  const QuotientIndicator({super.key, this.onViewTasks});
 
   @override
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
-
     return Consumer<ActivityProvider>(
-      builder: (context, provider, child) {
+      builder: (context, provider, _) {
         final quotient = provider.quotient;
-        final color = AppColors.quotientColor(quotient);
-
-        return AnimatedBuilder(
-          animation: _glowController,
-          builder: (context, _) {
-            return Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.bgCard,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.2 + _glowController.value * 0.1),
-                  width: 1,
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 18, 18, 18),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [AppColors.purple, Color(0xFF6937EE)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.purpleGlow,
+                blurRadius: 18,
+                offset: Offset(0, 9),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      t.isFrench
+                          ? 'Votre quotient du jour'
+                          : 'Your today’s task',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 17,
+                        height: 1.2,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      t.motivationalMessage(quotient),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextButton(
+                      onPressed: onViewTasks,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: AppColors.purple,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: Text(
+                        t.isFrench ? 'Voir les tâches' : 'View Task',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.08 + _glowController.value * 0.05),
-                    blurRadius: 24 + _glowController.value * 8,
-                    spreadRadius: 2,
-                  ),
-                ],
               ),
-              child: Row(
-                children: [
-                  // ── Anneau de progression ──
-                  SizedBox(
-                    width: 110,
-                    height: 110,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        CircularProgressIndicator(
-                          value: 1,
-                          strokeWidth: 10,
-                          strokeCap: StrokeCap.round,
-                          backgroundColor: AppColors.bgCardLight,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                            Colors.transparent,
-                          ),
-                        ),
-                        TweenAnimationBuilder<double>(
-                          tween: Tween(begin: 0, end: quotient / 100),
-                          duration: const Duration(milliseconds: 1000),
-                          curve: Curves.easeOutCubic,
-                          builder: (context, value, _) {
-                            return CircularProgressIndicator(
-                              value: value,
-                              strokeWidth: 10,
-                              strokeCap: StrokeCap.round,
-                              backgroundColor: Colors.transparent,
-                              valueColor: AlwaysStoppedAnimation<Color>(color),
-                            );
-                          },
-                        ),
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              AnimatedCounter(
-                                value: quotient,
-                                duration: const Duration(milliseconds: 800),
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: color,
-                                  height: 1,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '%',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: color.withValues(alpha: 0.7),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+              const SizedBox(width: 10),
+              SizedBox(
+                width: 78,
+                height: 78,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    CircularProgressIndicator(
+                      value: 1,
+                      strokeWidth: 7,
+                      strokeCap: StrokeCap.round,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Colors.white.withValues(alpha: .25),
+                      ),
                     ),
-                  ),
-
-                  const SizedBox(width: 24),
-
-                  // ── Texte ──
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          t.dailyQuotient,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: quotient / 100),
+                      duration: const Duration(milliseconds: 900),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) => CircularProgressIndicator(
+                        value: value,
+                        strokeWidth: 7,
+                        strokeCap: StrokeCap.round,
+                        valueColor: const AlwaysStoppedAnimation<Color>(
+                          Colors.white,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          t.motivationalMessage(quotient),
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: quotient / 100,
-                            minHeight: 6,
-                            backgroundColor: AppColors.bgCardLight,
-                            valueColor: AlwaysStoppedAnimation<Color>(color),
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          '${provider.completedToday.length}/${provider.todayActivities.length} ${t.completedLabel}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.textMuted,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: AnimatedCounter(
+                        value: quotient,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );

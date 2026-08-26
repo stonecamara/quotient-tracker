@@ -11,26 +11,26 @@ import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'theme/app_colors.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    systemNavigationBarColor: AppColors.bgDark,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: AppColors.bgDark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
 
   await StorageService.init();
   await NotificationService.init();
 
   final settings = Hive.box('settings');
-  final onboardingDone = settings.get('onboardingDone', defaultValue: false);
-  final savedLocale = settings.get('appLocale', defaultValue: 'fr');
+  final onboardingDone =
+      settings.get('onboardingDone', defaultValue: false) as bool;
+  final savedLocale = settings.get('appLocale', defaultValue: 'fr') as String;
 
-  runApp(MyApp(
-    showOnboarding: !onboardingDone,
-    initialLocale: savedLocale,
-  ));
+  runApp(MyApp(showOnboarding: !onboardingDone, initialLocale: savedLocale));
 }
 
 class MyApp extends StatelessWidget {
@@ -48,7 +48,9 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ActivityProvider()),
-        ChangeNotifierProvider(create: (_) => LocaleService()..setLocale(initialLocale)),
+        ChangeNotifierProvider(
+          create: (_) => LocaleService()..setLocale(initialLocale),
+        ),
       ],
       child: Consumer<LocaleService>(
         builder: (context, localeService, _) {
@@ -58,11 +60,11 @@ class MyApp extends StatelessWidget {
               title: 'Quotient',
               debugShowCheckedModeBanner: false,
               theme: ThemeData(
-                brightness: Brightness.dark,
+                brightness: Brightness.light,
                 scaffoldBackgroundColor: AppColors.bgDark,
-                colorScheme: const ColorScheme.dark(
-                  primary: AppColors.cyan,
-                  secondary: AppColors.cyanDark,
+                colorScheme: const ColorScheme.light(
+                  primary: AppColors.purple,
+                  secondary: AppColors.purpleDark,
                   surface: AppColors.bgCard,
                 ),
                 useMaterial3: true,
@@ -75,38 +77,11 @@ class MyApp extends StatelessWidget {
               ),
               home: showOnboarding
                   ? const OnboardingScreen()
-                  : const NotificationInitializer(),
+                  : const HomeScreen(),
             ),
           );
         },
       ),
     );
-  }
-}
-
-class NotificationInitializer extends StatefulWidget {
-  const NotificationInitializer({super.key});
-
-  @override
-  State<NotificationInitializer> createState() => _NotificationInitializerState();
-}
-
-class _NotificationInitializerState extends State<NotificationInitializer> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final granted = await NotificationService.requestPermissions();
-      debugPrint('Notifications permission: $granted');
-      if (mounted) {
-        final provider = context.read<ActivityProvider>();
-        await provider.loadActivities();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return const HomeScreen();
   }
 }

@@ -20,25 +20,27 @@ class AppLocalizations {
   String get onboardingSubtitle1 => _fr
       ? 'Suivez vos activités quotidiennes et maximisez votre quotient de productivité'
       : 'Track your daily activities and maximize your productivity quotient';
-  String get onboardingTitle2 => _fr ? 'Planifiez vos journées' : 'Plan your days';
+  String get onboardingTitle2 =>
+      _fr ? 'Planifiez vos journées' : 'Plan your days';
   String get onboardingSubtitle2 => _fr
       ? 'Créez des tâches récurrentes, définissez des heures et laissez l\'app vous guider'
       : 'Create recurring tasks, set times and let the app guide you';
-  String get onboardingTitle3 => _fr ? 'Choisissez votre langue' : 'Choose your language';
+  String get onboardingTitle3 =>
+      _fr ? 'Choisissez votre langue' : 'Choose your language';
   String get onboardingSubtitle3 => _fr
       ? 'Vous pourrez changer la langue plus tard dans les paramètres'
       : 'You can change the language later in settings';
   String get onboardingNext => _fr ? 'Suivant' : 'Next';
   String get onboardingStart => _fr ? 'Commencer' : 'Get Started';
   String get onboardingSkip => _fr ? 'Passer' : 'Skip';
-  String get onboardingTitle4 => _fr ? 'Comment vous appelez-vous ?' : 'What\'s your name?';
+  String get onboardingTitle4 =>
+      _fr ? 'Comment vous appelez-vous ?' : 'What\'s your name?';
   String get onboardingSubtitle4 => _fr
       ? 'Entrez votre prénom ou pseudo pour personnaliser votre expérience'
       : 'Enter your first name or nickname to personalize your experience';
   String get onboardingNameHint => _fr ? 'Votre prénom...' : 'Your name...';
-  String get onboardingNameRequired => _fr
-      ? 'Veuillez entrer votre prénom'
-      : 'Please enter your name';
+  String get onboardingNameRequired =>
+      _fr ? 'Veuillez entrer votre prénom' : 'Please enter your name';
 
   // ── Home Screen ──
   String greeting(String name) {
@@ -54,9 +56,8 @@ class AppLocalizations {
   String get noTasksHint => _fr
       ? 'Ajoutez votre première tâche pour commencer'
       : 'Add your first task to start tracking';
-  String get notificationTest => _fr
-      ? 'Notification test envoyée !'
-      : 'Test notification sent!';
+  String get notificationTest =>
+      _fr ? 'Notification test envoyée !' : 'Test notification sent!';
   String get batteryHint => _fr
       ? 'Paramètres > Batterie > Quotient > Non restreint'
       : 'Settings > Battery > Quotient > Unrestricted';
@@ -73,14 +74,14 @@ class AppLocalizations {
   String get newTask => _fr ? 'Nouvelle tâche' : 'New Task';
   String get editTask => _fr ? 'Modifier la tâche' : 'Edit Task';
   String get taskName => _fr ? 'Nom de la tâche' : 'Task Name';
-  String get taskNameHint => _fr
-      ? 'Lecture, Peinture, Exercice...'
-      : 'Reading, Painting, Exercise...';
-  String get taskNameRequired => _fr
-      ? 'Veuillez entrer un nom'
-      : 'Please enter a name';
-  String get description => _fr ? 'Description (optionnel)' : 'Description (optional)';
-  String get descriptionHint => _fr ? 'Ajouter des détails...' : 'Add some details...';
+  String get taskNameHint =>
+      _fr ? 'Lecture, Peinture, Exercice...' : 'Reading, Painting, Exercise...';
+  String get taskNameRequired =>
+      _fr ? 'Veuillez entrer un nom' : 'Please enter a name';
+  String get description =>
+      _fr ? 'Description (optionnel)' : 'Description (optional)';
+  String get descriptionHint =>
+      _fr ? 'Ajouter des détails...' : 'Add some details...';
   String get scheduledTime => _fr ? 'Heure prévue' : 'Scheduled Time';
   String get repeat => _fr ? 'Répéter' : 'Repeat';
   String get save => _fr ? 'Enregistrer' : 'Save Changes';
@@ -91,10 +92,18 @@ class AppLocalizations {
   String get completedLabel => _fr ? 'terminées' : 'completed';
 
   String motivationalMessage(int quotient) {
-    if (quotient >= 80) return _fr ? 'Excellent ! Continuez !' : 'Excellent! Keep it up!';
-    if (quotient >= 60) return _fr ? 'Super progrès aujourd\'hui !' : 'Great progress today!';
-    if (quotient >= 40) return _fr ? 'Pas mal, continuez !' : 'Not bad, keep going!';
-    if (quotient >= 20) return _fr ? 'Encore un petit effort !' : 'A few more to go!';
+    if (quotient >= 80) {
+      return _fr ? 'Excellent ! Continuez !' : 'Excellent! Keep it up!';
+    }
+    if (quotient >= 60) {
+      return _fr ? 'Super progrès aujourd\'hui !' : 'Great progress today!';
+    }
+    if (quotient >= 40) {
+      return _fr ? 'Pas mal, continuez !' : 'Not bad, keep going!';
+    }
+    if (quotient >= 20) {
+      return _fr ? 'Encore un petit effort !' : 'A few more to go!';
+    }
     if (quotient > 0) return _fr ? 'C\'est parti !' : 'Let\'s get started!';
     return _fr ? 'Ajoutez des tâches pour commencer !' : 'Add tasks to begin!';
   }
@@ -103,14 +112,36 @@ class AppLocalizations {
   String monthName(int month) {
     if (!_fr) {
       const enMonths = [
-        '', 'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
+        '',
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
       ];
       return enMonths[month];
     }
     const frMonths = [
-      '', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+      '',
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre',
     ];
     return frMonths[month];
   }
@@ -129,10 +160,7 @@ class AppLocalizations {
 // ── InheritedWidget pour propager les traductions ──
 class _LocaleInherited extends InheritedWidget {
   final AppLocalizations localizations;
-  const _LocaleInherited({
-    required this.localizations,
-    required super.child,
-  });
+  const _LocaleInherited({required this.localizations, required super.child});
 
   @override
   bool updateShouldNotify(_LocaleInherited oldWidget) {
@@ -144,11 +172,7 @@ class LocaleProvider extends StatelessWidget {
   final String locale;
   final Widget child;
 
-  const LocaleProvider({
-    super.key,
-    required this.locale,
-    required this.child,
-  });
+  const LocaleProvider({super.key, required this.locale, required this.child});
 
   @override
   Widget build(BuildContext context) {
