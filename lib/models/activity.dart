@@ -53,7 +53,9 @@ class Activity {
     return Activity(
       id: id,
       name: name ?? this.name,
-      description: identical(description, _unset) ? this.description : description as String?,
+      description: identical(description, _unset)
+          ? this.description
+          : description as String?,
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
       weeklyDays: weeklyDays ?? this.weeklyDays,

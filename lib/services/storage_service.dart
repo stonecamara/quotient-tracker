@@ -39,7 +39,10 @@ class StorageService {
     await activitiesBox.delete(id);
   }
 
-  static Future<void> updateActivityCompletion(String id, bool isCompleted) async {
+  static Future<void> updateActivityCompletion(
+    String id,
+    bool isCompleted,
+  ) async {
     final data = activitiesBox.get(id);
     if (data is Map) {
       final activity = Activity.fromMap(Map<String, dynamic>.from(data));
@@ -57,7 +60,10 @@ class StorageService {
       if (data is Map) {
         try {
           final activity = Activity.fromMap(Map<String, dynamic>.from(data));
-          await box.putAt(i, activity.copyWith(isCompletedToday: false).toMap());
+          await box.putAt(
+            i,
+            activity.copyWith(isCompletedToday: false).toMap(),
+          );
         } on FormatException {
           // Conserver l’entrée invalide pour permettre une migration ultérieure.
         } on TypeError {
@@ -82,6 +88,9 @@ class StorageService {
   }
 
   static Future<bool> getNotificationEnabled() async {
-    return Hive.box(_settingsBox).get('notificationsEnabled', defaultValue: true) as bool;
+    return Hive.box(
+          _settingsBox,
+        ).get('notificationsEnabled', defaultValue: true)
+        as bool;
   }
 }

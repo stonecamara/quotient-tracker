@@ -2,10 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quotient_tracker/models/activity.dart';
 import 'package:quotient_tracker/services/notification_service.dart';
 
-Activity makeActivity({
-  List<bool>? days,
-  String? description,
-}) {
+Activity makeActivity({List<bool>? days, String? description}) {
   return Activity.create(
     name: 'Lecture',
     description: description,

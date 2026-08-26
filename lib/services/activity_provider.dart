@@ -46,7 +46,8 @@ class ActivityProvider with ChangeNotifier {
   Future<void> _checkDailyReset() async {
     final lastReset = await StorageService.getLastResetDate();
     final now = DateTime.now();
-    final isNewDay = lastReset == null ||
+    final isNewDay =
+        lastReset == null ||
         lastReset.year != now.year ||
         lastReset.month != now.month ||
         lastReset.day != now.day;
@@ -64,11 +65,14 @@ class ActivityProvider with ChangeNotifier {
     if (activity.name.trim().isEmpty) {
       throw ArgumentError('Le nom de l’activité est obligatoire');
     }
-    if (activity.hour < 0 || activity.hour > 23 ||
-        activity.minute < 0 || activity.minute > 59) {
+    if (activity.hour < 0 ||
+        activity.hour > 23 ||
+        activity.minute < 0 ||
+        activity.minute > 59) {
       throw ArgumentError('L’heure de l’activité est invalide');
     }
-    if (activity.weeklyDays.length != 7 || !activity.weeklyDays.contains(true)) {
+    if (activity.weeklyDays.length != 7 ||
+        !activity.weeklyDays.contains(true)) {
       throw ArgumentError('Au moins un jour doit être sélectionné');
     }
   }
@@ -105,12 +109,17 @@ class ActivityProvider with ChangeNotifier {
     if (index == -1) return;
 
     final previous = _activities[index];
-    final updated = previous.copyWith(isCompletedToday: !previous.isCompletedToday);
+    final updated = previous.copyWith(
+      isCompletedToday: !previous.isCompletedToday,
+    );
     _activities = [..._activities]..[index] = updated;
     notifyListeners();
 
     try {
-      await StorageService.updateActivityCompletion(id, updated.isCompletedToday);
+      await StorageService.updateActivityCompletion(
+        id,
+        updated.isCompletedToday,
+      );
       if (updated.isCompletedToday) {
         await NotificationService.cancelNotification(id);
       } else {

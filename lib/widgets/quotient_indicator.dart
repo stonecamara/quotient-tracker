@@ -49,12 +49,16 @@ class _QuotientIndicatorState extends State<QuotientIndicator>
                 color: AppColors.bgCard,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: color.withValues(alpha: 0.2 + _glowController.value * 0.1),
+                  color: color.withValues(
+                    alpha: 0.2 + _glowController.value * 0.1,
+                  ),
                   width: 1,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: color.withValues(alpha: 0.08 + _glowController.value * 0.05),
+                    color: color.withValues(
+                      alpha: 0.08 + _glowController.value * 0.05,
+                    ),
                     blurRadius: 24 + _glowController.value * 8,
                     spreadRadius: 2,
                   ),

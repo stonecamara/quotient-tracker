@@ -13,21 +13,28 @@ class NotificationService {
     if (_initialized || defaultTargetPlatform == TargetPlatform.linux) return;
 
     tz.initializeTimeZones();
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
     await _plugin.initialize(
-      settings: const InitializationSettings(android: androidSettings, iOS: iosSettings),
+      settings: const InitializationSettings(
+        android: androidSettings,
+        iOS: iosSettings,
+      ),
       onDidReceiveNotificationResponse: (details) {
         debugPrint('Notification tapped: ${details.payload}');
       },
     );
 
-    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(
       const AndroidNotificationChannel(
         'activity_reminders',
@@ -73,29 +80,38 @@ class NotificationService {
     if (defaultTargetPlatform == TargetPlatform.linux) return true;
     if (!_initialized) await init();
 
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     final androidGranted = await android?.requestNotificationsPermission();
-    final ios = _plugin.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>();
-    final iosGranted = await ios?.requestPermissions(alert: true, badge: true, sound: true);
+    final ios = _plugin
+        .resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin
+        >();
+    final iosGranted = await ios?.requestPermissions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
     return androidGranted ?? iosGranted ?? true;
   }
 
   static NotificationDetails get _details => const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'activity_reminders',
-          "Rappels d'activités",
-          channelDescription: 'Notifications pour les rappels d’activités planifiées',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-          enableVibration: true,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound('notification_sound'),
-        ),
-        iOS: DarwinNotificationDetails(),
-      );
+    android: AndroidNotificationDetails(
+      'activity_reminders',
+      "Rappels d'activités",
+      channelDescription:
+          'Notifications pour les rappels d’activités planifiées',
+      importance: Importance.high,
+      priority: Priority.high,
+      icon: '@mipmap/ic_launcher',
+      enableVibration: true,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('notification_sound'),
+    ),
+    iOS: DarwinNotificationDetails(),
+  );
 
   static Future<void> showTestNotification() async {
     if (defaultTargetPlatform == TargetPlatform.linux) return;
@@ -126,7 +142,8 @@ class NotificationService {
     await _plugin.zonedSchedule(
       id: _notificationId(activity.id),
       title: 'Rappel: ${activity.name}',
-      body: activity.description ?? 'Il est temps de commencer votre activité !',
+      body:
+          activity.description ?? 'Il est temps de commencer votre activité !',
       scheduledDate: scheduledDate,
       notificationDetails: _details,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -144,7 +161,9 @@ class NotificationService {
     await _plugin.cancelAll();
   }
 
-  static Future<void> rescheduleAllNotifications(List<Activity> activities) async {
+  static Future<void> rescheduleAllNotifications(
+    List<Activity> activities,
+  ) async {
     if (defaultTargetPlatform == TargetPlatform.linux) return;
     if (!_initialized) await init();
     await cancelAllNotifications();

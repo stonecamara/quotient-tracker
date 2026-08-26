@@ -57,7 +57,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
             children: [
               // ── Header ──
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 8,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -127,8 +130,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                             controller: _nameController,
                             hint: t.taskNameHint,
                             icon: Icons.edit_rounded,
-                            validator: (v) =>
-                                v == null || v.isEmpty ? t.taskNameRequired : null,
+                            validator: (v) => v == null || v.isEmpty
+                                ? t.taskNameRequired
+                                : null,
                           ),
                         ),
 
@@ -177,7 +181,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: AppColors.cyan.withValues(alpha: 0.12),
+                                      color: AppColors.cyan.withValues(
+                                        alpha: 0.12,
+                                      ),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(
@@ -234,7 +240,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.cyan.withValues(alpha: 0.35),
+                                    color: AppColors.cyan.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     blurRadius: 16,
                                     offset: const Offset(0, 6),
                                   ),
@@ -309,7 +317,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
           borderSide: const BorderSide(color: AppColors.danger, width: 1),
         ),
         prefixIcon: Icon(icon, color: AppColors.textMuted, size: 20),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -426,7 +437,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       pageBuilder: (a, b, c) => AlertDialog(
         backgroundColor: AppColors.bgCard,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(t.deleteTitle, style: const TextStyle(color: AppColors.textPrimary)),
+        title: Text(
+          t.deleteTitle,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
         content: Text(
           t.deleteConfirm,
           style: const TextStyle(color: AppColors.textSecondary),
@@ -434,11 +448,16 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(t.cancel, style: const TextStyle(color: AppColors.textSecondary)),
+            child: Text(
+              t.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
           ),
           TextButton(
             onPressed: () {
-              context.read<ActivityProvider>().deleteActivity(widget.activity!.id);
+              context.read<ActivityProvider>().deleteActivity(
+                widget.activity!.id,
+              );
               Navigator.pop(context);
               Navigator.pop(context);
             },

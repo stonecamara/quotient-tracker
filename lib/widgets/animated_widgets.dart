@@ -53,10 +53,7 @@ class _StaggeredAnimationState extends State<StaggeredAnimation>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _fadeAnim,
-      child: SlideTransition(
-        position: _slideAnim,
-        child: widget.child,
-      ),
+      child: SlideTransition(position: _slideAnim, child: widget.child),
     );
   }
 }
@@ -140,9 +137,10 @@ class _PulseAnimationState extends State<PulseAnimation>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: widget.duration);
-    _scale = Tween<double>(begin: 1.0, end: 1.08).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: 1.08,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
     _controller.repeat(reverse: true);
   }
 
@@ -178,10 +176,7 @@ class AnimatedCounter extends StatelessWidget {
       duration: duration,
       curve: Curves.easeOutCubic,
       builder: (context, val, _) {
-        return Text(
-          val.round().toString(),
-          style: style,
-        );
+        return Text(val.round().toString(), style: style);
       },
     );
   }
@@ -216,9 +211,10 @@ class _TapScaleState extends State<TapScale>
       vsync: this,
       duration: const Duration(milliseconds: 150),
     );
-    _scale = Tween<double>(begin: 1.0, end: widget.tapScale).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 1.0,
+      end: widget.tapScale,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
