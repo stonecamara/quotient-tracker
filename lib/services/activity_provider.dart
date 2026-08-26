@@ -7,21 +7,23 @@ class ActivityProvider with ChangeNotifier {
   List<Activity> _activities = [];
   bool _isLoading = false;
 
-  List<Activity> get activities => _activities;
+  List<Activity> get activities => List.unmodifiable(_activities);
   bool get isLoading => _isLoading;
 
   List<Activity> get todayActivities {
-    return _activities.where((a) => a.isScheduledForToday).toList()
-      ..sort((a, b) => a.hour.compareTo(b.hour));
+    final result = _activities.where((a) => a.isScheduledForToday).toList();
+    result.sort((a, b) {
+      final byHour = a.hour.compareTo(b.hour);
+      return byHour != 0 ? byHour : a.minute.compareTo(b.minute);
+    });
+    return result;
   }
 
-  List<Activity> get completedToday {
-    return todayActivities.where((a) => a.isCompletedToday).toList();
-  }
+  List<Activity> get completedToday =>
+      todayActivities.where((a) => a.isCompletedToday).toList();
 
-  List<Activity> get pendingToday {
-    return todayActivities.where((a) => !a.isCompletedToday).toList();
-  }
+  List<Activity> get pendingToday =>
+      todayActivities.where((a) => !a.isCompletedToday).toList();
 
   int get quotient {
     if (todayActivities.isEmpty) return 0;
@@ -29,87 +31,95 @@ class ActivityProvider with ChangeNotifier {
   }
 
   Future<void> loadActivities() async {
+    if (_isLoading) return;
     _isLoading = true;
     notifyListeners();
-
-    _activities = await StorageService.getActivities();
-
-    // Vérifier si on doit réinitialiser les complétions quotidiennes
-    await _checkDailyReset();
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      _activities = await StorageService.getActivities();
+      await _checkDailyReset();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> _checkDailyReset() async {
     final lastReset = await StorageService.getLastResetDate();
     final now = DateTime.now();
-    
-    if (lastReset == null || lastReset.day != now.day || lastReset.month != now.month || lastReset.year != now.year) {
-      await StorageService.resetDailyCompletions();
-      await StorageService.saveLastResetDate(now);
-      
-      // Mettre à jour les activités en mémoire
-      for (var i = 0; i < _activities.length; i++) {
-        _activities[i] = _activities[i].copyWith(isCompletedToday: false);
-      }
+    final isNewDay = lastReset == null ||
+        lastReset.year != now.year ||
+        lastReset.month != now.month ||
+        lastReset.day != now.day;
+
+    if (!isNewDay) return;
+    await StorageService.resetDailyCompletions();
+    await StorageService.saveLastResetDate(now);
+    _activities = [
+      for (final activity in _activities)
+        activity.copyWith(isCompletedToday: false),
+    ];
+  }
+
+  void _validate(Activity activity) {
+    if (activity.name.trim().isEmpty) {
+      throw ArgumentError('Le nom de l’activité est obligatoire');
+    }
+    if (activity.hour < 0 || activity.hour > 23 ||
+        activity.minute < 0 || activity.minute > 59) {
+      throw ArgumentError('L’heure de l’activité est invalide');
+    }
+    if (activity.weeklyDays.length != 7 || !activity.weeklyDays.contains(true)) {
+      throw ArgumentError('Au moins un jour doit être sélectionné');
     }
   }
 
   Future<void> addActivity(Activity activity) async {
+    _validate(activity);
     await StorageService.saveActivity(activity);
-    _activities.add(activity);
-    
-    if (activity.isScheduledForToday) {
-      await NotificationService.scheduleActivityNotification(activity);
-    }
-    
+    _activities = [..._activities, activity];
+    await NotificationService.scheduleActivityNotification(activity);
     notifyListeners();
   }
 
   Future<void> updateActivity(Activity activity) async {
-    await StorageService.saveActivity(activity);
+    _validate(activity);
     final index = _activities.indexWhere((a) => a.id == activity.id);
-    if (index != -1) {
-      _activities[index] = activity;
-    }
-    
-    // Re-planifier la notification
+    if (index == -1) return;
+
+    await StorageService.saveActivity(activity);
+    _activities = [..._activities]..[index] = activity;
     await NotificationService.cancelNotification(activity.id);
-    if (activity.isScheduledForToday) {
-      await NotificationService.scheduleActivityNotification(activity);
-    }
-    
+    await NotificationService.scheduleActivityNotification(activity);
     notifyListeners();
   }
 
   Future<void> deleteActivity(String id) async {
     await StorageService.deleteActivity(id);
     await NotificationService.cancelNotification(id);
-    _activities.removeWhere((a) => a.id == id);
+    _activities = _activities.where((a) => a.id != id).toList();
     notifyListeners();
   }
 
   Future<void> toggleActivityCompletion(String id) async {
+    final index = _activities.indexWhere((a) => a.id == id);
+    if (index == -1) return;
+
+    final previous = _activities[index];
+    final updated = previous.copyWith(isCompletedToday: !previous.isCompletedToday);
+    _activities = [..._activities]..[index] = updated;
+    notifyListeners();
+
     try {
-      final index = _activities.indexWhere((a) => a.id == id);
-      if (index == -1) return;
-
-      final activity = _activities[index];
-      final newStatus = !activity.isCompletedToday;
-
-      // Mettre à jour le state immédiatement (optimistic update)
-      _activities[index] = activity.copyWith(isCompletedToday: newStatus);
-      notifyListeners();
-
-      // Persister en arrière-plan
-      await StorageService.updateActivityCompletion(id, newStatus);
-
-      if (newStatus) {
+      await StorageService.updateActivityCompletion(id, updated.isCompletedToday);
+      if (updated.isCompletedToday) {
         await NotificationService.cancelNotification(id);
+      } else {
+        await NotificationService.scheduleActivityNotification(updated);
       }
-    } catch (e) {
-      debugPrint('toggleActivityCompletion error: $e');
+    } catch (error) {
+      _activities = [..._activities]..[index] = previous;
+      notifyListeners();
+      debugPrint('toggleActivityCompletion error: $error');
     }
   }
 }

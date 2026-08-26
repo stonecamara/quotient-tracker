@@ -1,10 +1,15 @@
+import 'package:uuid/uuid.dart';
+
 class Activity {
+  static const _unset = Object();
+  static const _uuid = Uuid();
+
   final String id;
   final String name;
   final String? description;
   final int hour;
   final int minute;
-  final List<bool> weeklyDays; // [lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche]
+  final List<bool> weeklyDays;
   final bool isCompletedToday;
   final DateTime createdAt;
 
@@ -14,10 +19,10 @@ class Activity {
     this.description,
     required this.hour,
     required this.minute,
-    required this.weeklyDays,
+    required List<bool> weeklyDays,
     this.isCompletedToday = false,
     required this.createdAt,
-  });
+  }) : weeklyDays = List<bool>.unmodifiable(weeklyDays);
 
   factory Activity.create({
     required String name,
@@ -27,7 +32,7 @@ class Activity {
     required List<bool> weeklyDays,
   }) {
     return Activity(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _uuid.v4(),
       name: name,
       description: description,
       hour: hour,
@@ -39,7 +44,7 @@ class Activity {
 
   Activity copyWith({
     String? name,
-    String? description,
+    Object? description = _unset,
     int? hour,
     int? minute,
     List<bool>? weeklyDays,
@@ -48,7 +53,7 @@ class Activity {
     return Activity(
       id: id,
       name: name ?? this.name,
-      description: description ?? this.description,
+      description: identical(description, _unset) ? this.description : description as String?,
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
       weeklyDays: weeklyDays ?? this.weeklyDays,
@@ -71,24 +76,27 @@ class Activity {
   }
 
   factory Activity.fromMap(Map<String, dynamic> map) {
+    final days = List<bool>.from(map['weeklyDays'] as List);
+    if (days.length != 7) {
+      throw const FormatException('weeklyDays doit contenir 7 éléments');
+    }
     return Activity(
-      id: map['id'],
-      name: map['name'],
-      description: map['description'],
-      hour: map['hour'],
-      minute: map['minute'],
-      weeklyDays: List<bool>.from(map['weeklyDays']),
-      isCompletedToday: map['isCompletedToday'] ?? false,
-      createdAt: DateTime.parse(map['createdAt']),
+      id: map['id'] as String,
+      name: map['name'] as String,
+      description: map['description'] as String?,
+      hour: map['hour'] as int,
+      minute: map['minute'] as int,
+      weeklyDays: days,
+      isCompletedToday: map['isCompletedToday'] as bool? ?? false,
+      createdAt: DateTime.parse(map['createdAt'] as String),
     );
   }
 
-  String get scheduledTimeFormatted {
-    return '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-  }
+  String get scheduledTimeFormatted =>
+      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
   bool get isScheduledForToday {
-    final today = DateTime.now().weekday - 1; // 0 = lundi
+    final today = DateTime.now().weekday - 1;
     return weeklyDays[today];
   }
 }
