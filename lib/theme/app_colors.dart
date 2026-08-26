@@ -1,44 +1,49 @@
 import 'package:flutter/material.dart';
 
-/// Palette dark blue / cyan — style illustration flat.
+/// Palette claire, violette et pastel inspirée de la maquette Figma.
 class AppColors {
   AppColors._();
 
-  // ── Fond ──
-  static const Color bgDark = Color(0xFF0A1638);
-  static const Color bgDeep = Color(0xFF0E1F4F);
-  static const Color bgCard = Color(0xFF162557);
-  static const Color bgCardLight = Color(0xFF1E3068);
+  static const Color bgDark = Color(0xFFF9F8FF);
+  static const Color bgDeep = Color(0xFFF3F0FF);
+  static const Color bgCard = Color(0xFFFFFFFF);
+  static const Color bgCardLight = Color(0xFFEDE8FF);
 
-  // ── Accent ──
-  static const Color cyan = Color(0xFF00D4FF);
-  static const Color cyanDark = Color(0xFF00A8CC);
-  static const Color cyanGlow = Color(0x4400D4FF);
+  static const Color purple = Color(0xFF5B2DE8);
+  static const Color purpleDark = Color(0xFF4920C8);
+  static const Color purpleSoft = Color(0xFFF0EBFF);
+  static const Color purpleGlow = Color(0x335B2DE8);
 
-  // ── Texte ──
-  static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFF8FA3CC);
-  static const Color textMuted = Color(0xFF5A6E94);
+  // Alias conservés pour les widgets existants.
+  static const Color cyan = purple;
+  static const Color cyanDark = purpleDark;
+  static const Color cyanGlow = purpleGlow;
 
-  // ── États ──
-  static const Color success = Color(0xFF00E676);
-  static const Color warning = Color(0xFFFFB74D);
-  static const Color danger = Color(0xFFFF5252);
+  static const Color textPrimary = Color(0xFF262334);
+  static const Color textSecondary = Color(0xFF716D7F);
+  static const Color textMuted = Color(0xFFA19DAD);
 
-  // ── Couleurs de fond (sans dégradé) ──
-  static const Color bgCardCompleted = Color(0xFF0D3D2E);
-  static const Color bgCardCompletedAlt = Color(0xFF0A2E44);
+  static const Color success = Color(0xFF48B58B);
+  static const Color warning = Color(0xFFF19A63);
+  static const Color danger = Color(0xFFE66B87);
+
+  static const Color pastelBlue = Color(0xFFEAF7FF);
+  static const Color pastelPink = Color(0xFFFFEFF5);
+  static const Color pastelOrange = Color(0xFFFFF2E8);
+  static const Color pastelYellow = Color(0xFFFFF9DF);
+
+  static const Color bgCardCompleted = Color(0xFFEFFAF6);
+  static const Color bgCardCompletedAlt = Color(0xFFF4F0FF);
 
   static Color cardColor(bool completed) {
     return completed ? bgCardCompleted : bgCard;
   }
 
-  /// Couleur du quotient selon le pourcentage.
   static Color quotientColor(int quotient) {
-    if (quotient >= 80) return success;
-    if (quotient >= 60) return cyan;
+    if (quotient >= 80) return purple;
+    if (quotient >= 60) return purple;
     if (quotient >= 40) return warning;
-    if (quotient >= 20) return const Color(0xFFFF9800);
+    if (quotient >= 20) return const Color(0xFFE99A45);
     return textMuted;
   }
 }
