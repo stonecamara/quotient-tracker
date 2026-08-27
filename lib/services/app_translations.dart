@@ -90,6 +90,11 @@ class AppLocalizations {
       : 'A new activity must start today or later.';
   String get today => _fr ? "Aujourd'hui" : 'Today';
   String get repeat => _fr ? 'Répéter' : 'Repeat';
+  String get repeatWeekly =>
+      _fr ? 'Répéter chaque semaine' : 'Repeat every week';
+  String get repeatWeeklyHint => _fr
+      ? 'Désactivé : cette activité est prévue une seule fois.'
+      : 'Off: this activity is scheduled only once.';
   String get save => _fr ? 'Enregistrer' : 'Save Changes';
   String get finish => _fr ? 'Terminer' : 'Finish';
 

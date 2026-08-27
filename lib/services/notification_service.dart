@@ -61,6 +61,18 @@ class NotificationService {
   /// Retourne la prochaine occurrence sur un jour réellement sélectionné.
   static DateTime? nextOccurrence(Activity activity, {DateTime? from}) {
     final current = from ?? DateTime.now();
+
+    if (!activity.repeatsWeekly) {
+      final occurrence = DateTime(
+        activity.startDate.year,
+        activity.startDate.month,
+        activity.startDate.day,
+        activity.hour,
+        activity.minute,
+      );
+      return occurrence.isAfter(current) ? occurrence : null;
+    }
+
     final start = activity.startDate.isAfter(current)
         ? activity.startDate
         : current;

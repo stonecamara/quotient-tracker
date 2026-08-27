@@ -10,6 +10,7 @@ class Activity {
   final int hour;
   final int minute;
   final List<bool> weeklyDays;
+  final bool repeatsWeekly;
   final bool isCompletedToday;
   final DateTime createdAt;
   final DateTime startDate;
@@ -21,6 +22,7 @@ class Activity {
     required this.hour,
     required this.minute,
     required List<bool> weeklyDays,
+    this.repeatsWeekly = false,
     this.isCompletedToday = false,
     required this.createdAt,
     DateTime? startDate,
@@ -33,6 +35,7 @@ class Activity {
     required int hour,
     required int minute,
     required List<bool> weeklyDays,
+    bool repeatsWeekly = false,
     DateTime? startDate,
   }) {
     final now = DateTime.now();
@@ -43,6 +46,7 @@ class Activity {
       hour: hour,
       minute: minute,
       weeklyDays: weeklyDays,
+      repeatsWeekly: repeatsWeekly,
       createdAt: now,
       startDate: startDate ?? now,
     );
@@ -54,6 +58,7 @@ class Activity {
     int? hour,
     int? minute,
     List<bool>? weeklyDays,
+    bool? repeatsWeekly,
     bool? isCompletedToday,
     DateTime? startDate,
   }) {
@@ -66,6 +71,7 @@ class Activity {
       hour: hour ?? this.hour,
       minute: minute ?? this.minute,
       weeklyDays: weeklyDays ?? this.weeklyDays,
+      repeatsWeekly: repeatsWeekly ?? this.repeatsWeekly,
       isCompletedToday: isCompletedToday ?? this.isCompletedToday,
       createdAt: createdAt,
       startDate: startDate ?? this.startDate,
@@ -80,6 +86,7 @@ class Activity {
       'hour': hour,
       'minute': minute,
       'weeklyDays': weeklyDays,
+      'repeatsWeekly': repeatsWeekly,
       'isCompletedToday': isCompletedToday,
       'createdAt': createdAt.toIso8601String(),
       'startDate': startDate.toIso8601String(),
@@ -104,6 +111,10 @@ class Activity {
       hour: map['hour'] as int,
       minute: map['minute'] as int,
       weeklyDays: days,
+      // Les anciennes données représentaient aussi les activités uniques avec
+      // une liste de jours. Elles deviennent uniques par défaut pour éviter
+      // qu’une activité passée ne réapparaisse sur les jours voisins.
+      repeatsWeekly: map['repeatsWeekly'] as bool? ?? false,
       isCompletedToday: map['isCompletedToday'] as bool? ?? false,
       createdAt: createdAt,
       startDate: startDate ?? createdAt,
@@ -115,6 +126,9 @@ class Activity {
 
   bool isScheduledFor(DateTime date) {
     final day = _dateOnly(date);
+    if (!repeatsWeekly) {
+      return day == startDate;
+    }
     return !day.isBefore(startDate) && weeklyDays[day.weekday - 1];
   }
 

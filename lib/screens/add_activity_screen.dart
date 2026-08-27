@@ -23,6 +23,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   int _selectedHour = TimeOfDay.now().hour;
   int _selectedMinute = TimeOfDay.now().minute;
   DateTime _selectedStartDate = DateTime.now();
+  bool _repeatsWeekly = false;
   List<bool> _selectedDays = List<bool>.filled(7, false);
 
   bool get isEditing => widget.activity != null;
@@ -36,6 +37,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _selectedHour = widget.activity!.hour;
       _selectedMinute = widget.activity!.minute;
       _selectedStartDate = widget.activity!.startDate;
+      _repeatsWeekly = widget.activity!.repeatsWeekly;
       _selectedDays = List<bool>.from(widget.activity!.weeklyDays);
     } else {
       _selectedDays[DateTime.now().weekday - 1] = true;
@@ -237,16 +239,23 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
                         const SizedBox(height: 20),
 
-                        // Jours
-                        SlideFadeIn(
-                          delay: const Duration(milliseconds: 600),
-                          child: _buildLabel(t.repeat),
-                        ),
-                        const SizedBox(height: 8),
+                        // Répétition
                         SlideFadeIn(
                           delay: const Duration(milliseconds: 700),
-                          child: _buildDaysSelector(t),
+                          child: _buildRepeatToggle(t),
                         ),
+                        if (_repeatsWeekly) ...[
+                          const SizedBox(height: 12),
+                          SlideFadeIn(
+                            delay: const Duration(milliseconds: 750),
+                            child: _buildLabel(t.repeat),
+                          ),
+                          const SizedBox(height: 8),
+                          SlideFadeIn(
+                            delay: const Duration(milliseconds: 800),
+                            child: _buildDaysSelector(t),
+                          ),
+                        ],
 
                         const SizedBox(height: 32),
 
@@ -343,6 +352,35 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRepeatToggle(AppLocalizations t) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.bgCardLight, width: 1),
+      ),
+      child: SwitchListTile.adaptive(
+        value: _repeatsWeekly,
+        onChanged: (value) => setState(() => _repeatsWeekly = value),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        activeThumbColor: AppColors.purple,
+        title: Text(
+          t.repeatWeekly,
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        subtitle: Text(
+          t.repeatWeeklyHint,
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
         ),
       ),
     );
@@ -525,6 +563,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         hour: _selectedHour,
         minute: _selectedMinute,
         weeklyDays: _selectedDays,
+        repeatsWeekly: _repeatsWeekly,
         startDate: _selectedStartDate,
       );
       await provider.updateActivity(updated);
@@ -537,6 +576,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         hour: _selectedHour,
         minute: _selectedMinute,
         weeklyDays: _selectedDays,
+        repeatsWeekly: _repeatsWeekly,
         startDate: _selectedStartDate,
       );
       await provider.addActivity(newActivity);
