@@ -61,17 +61,24 @@ class NotificationService {
   /// Retourne la prochaine occurrence sur un jour réellement sélectionné.
   static DateTime? nextOccurrence(Activity activity, {DateTime? from}) {
     final current = from ?? DateTime.now();
-    for (var offset = 0; offset < 7; offset++) {
+    final start = activity.startDate.isAfter(current)
+        ? activity.startDate
+        : current;
+
+    for (var offset = 0; offset <= 7; offset++) {
       final candidateDate = DateTime(
-        current.year,
-        current.month,
-        current.day + offset,
+        start.year,
+        start.month,
+        start.day + offset,
         activity.hour,
         activity.minute,
       );
       final weekdayIndex = candidateDate.weekday - 1;
       if (!activity.weeklyDays[weekdayIndex]) continue;
-      if (candidateDate.isAfter(current)) return candidateDate;
+      if (candidateDate.isAfter(current) &&
+          !candidateDate.isBefore(activity.startDate)) {
+        return candidateDate;
+      }
     }
     return null;
   }

@@ -22,6 +22,17 @@ class ActivityProvider with ChangeNotifier {
   List<Activity> get completedToday =>
       todayActivities.where((a) => a.isCompletedToday).toList();
 
+  List<Activity> activitiesForDate(DateTime date) {
+    final result = _activities
+        .where((activity) => activity.isScheduledFor(date))
+        .toList();
+    result.sort((a, b) {
+      final byHour = a.hour.compareTo(b.hour);
+      return byHour != 0 ? byHour : a.minute.compareTo(b.minute);
+    });
+    return result;
+  }
+
   List<Activity> get pendingToday =>
       todayActivities.where((a) => !a.isCompletedToday).toList();
 

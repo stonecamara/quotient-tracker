@@ -83,6 +83,9 @@ class AppLocalizations {
   String get descriptionHint =>
       _fr ? 'Ajouter des détails...' : 'Add some details...';
   String get scheduledTime => _fr ? 'Heure prévue' : 'Scheduled Time';
+  String get startDate => _fr ? 'Date de début' : 'Start date';
+  String get chooseDate => _fr ? 'Choisir une date' : 'Choose a date';
+  String get today => _fr ? "Aujourd'hui" : 'Today';
   String get repeat => _fr ? 'Répéter' : 'Repeat';
   String get save => _fr ? 'Enregistrer' : 'Save Changes';
   String get finish => _fr ? 'Terminer' : 'Finish';

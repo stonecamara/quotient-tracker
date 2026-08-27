@@ -187,9 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
     String userName,
     List<DateTime> dates,
   ) {
-    final activities = _selectedDateIndex == 2
-        ? provider.todayActivities
-        : <Activity>[];
+    final selectedDate = dates[_selectedDateIndex];
+    final activities = provider.activitiesForDate(selectedDate);
+    final isToday = _selectedDateIndex == 2;
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
       SliverToBoxAdapter(
@@ -205,13 +205,19 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
           child: Text(
-            _selectedDateIndex == 2
-                ? (t.isFrench
-                      ? 'Tâches prévues aujourd’hui'
-                      : 'Tasks planned today')
-                : (t.isFrench
-                      ? 'Aucune tâche pour cette date'
-                      : 'No tasks for this date'),
+            activities.isEmpty
+                ? (isToday
+                      ? (t.isFrench
+                            ? 'Aucune tâche prévue aujourd’hui'
+                            : 'No tasks planned today')
+                      : (t.isFrench
+                            ? 'Aucune tâche pour cette date'
+                            : 'No tasks for this date'))
+                : (isToday
+                      ? (t.isFrench
+                            ? 'Tâches prévues aujourd’hui'
+                            : 'Tasks planned today')
+                      : '${selectedDate.day} ${t.monthName(selectedDate.month)}'),
             style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 18,

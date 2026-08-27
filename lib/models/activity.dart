@@ -12,6 +12,7 @@ class Activity {
   final List<bool> weeklyDays;
   final bool isCompletedToday;
   final DateTime createdAt;
+  final DateTime startDate;
 
   Activity({
     required this.id,
@@ -22,7 +23,9 @@ class Activity {
     required List<bool> weeklyDays,
     this.isCompletedToday = false,
     required this.createdAt,
-  }) : weeklyDays = List<bool>.unmodifiable(weeklyDays);
+    DateTime? startDate,
+  }) : weeklyDays = List<bool>.unmodifiable(weeklyDays),
+       startDate = _dateOnly(startDate ?? createdAt);
 
   factory Activity.create({
     required String name,
@@ -30,7 +33,9 @@ class Activity {
     required int hour,
     required int minute,
     required List<bool> weeklyDays,
+    DateTime? startDate,
   }) {
+    final now = DateTime.now();
     return Activity(
       id: _uuid.v4(),
       name: name,
@@ -38,7 +43,8 @@ class Activity {
       hour: hour,
       minute: minute,
       weeklyDays: weeklyDays,
-      createdAt: DateTime.now(),
+      createdAt: now,
+      startDate: startDate ?? now,
     );
   }
 
@@ -49,6 +55,7 @@ class Activity {
     int? minute,
     List<bool>? weeklyDays,
     bool? isCompletedToday,
+    DateTime? startDate,
   }) {
     return Activity(
       id: id,
@@ -61,6 +68,7 @@ class Activity {
       weeklyDays: weeklyDays ?? this.weeklyDays,
       isCompletedToday: isCompletedToday ?? this.isCompletedToday,
       createdAt: createdAt,
+      startDate: startDate ?? this.startDate,
     );
   }
 
@@ -74,6 +82,7 @@ class Activity {
       'weeklyDays': weeklyDays,
       'isCompletedToday': isCompletedToday,
       'createdAt': createdAt.toIso8601String(),
+      'startDate': startDate.toIso8601String(),
     };
   }
 
@@ -82,6 +91,12 @@ class Activity {
     if (days.length != 7) {
       throw const FormatException('weeklyDays doit contenir 7 éléments');
     }
+    final createdAt = DateTime.parse(map['createdAt'] as String);
+    final storedStartDate = map['startDate'];
+    final startDate = storedStartDate is String
+        ? DateTime.tryParse(storedStartDate)
+        : null;
+
     return Activity(
       id: map['id'] as String,
       name: map['name'] as String,
@@ -90,15 +105,22 @@ class Activity {
       minute: map['minute'] as int,
       weeklyDays: days,
       isCompletedToday: map['isCompletedToday'] as bool? ?? false,
-      createdAt: DateTime.parse(map['createdAt'] as String),
+      createdAt: createdAt,
+      startDate: startDate ?? createdAt,
     );
   }
 
   String get scheduledTimeFormatted =>
       '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
 
-  bool get isScheduledForToday {
-    final today = DateTime.now().weekday - 1;
-    return weeklyDays[today];
+  bool isScheduledFor(DateTime date) {
+    final day = _dateOnly(date);
+    return !day.isBefore(startDate) && weeklyDays[day.weekday - 1];
+  }
+
+  bool get isScheduledForToday => isScheduledFor(DateTime.now());
+
+  static DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 }

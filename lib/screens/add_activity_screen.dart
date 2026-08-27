@@ -22,6 +22,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
   int _selectedHour = TimeOfDay.now().hour;
   int _selectedMinute = TimeOfDay.now().minute;
+  DateTime _selectedStartDate = DateTime.now();
   List<bool> _selectedDays = [true, true, true, true, true, false, false];
 
   bool get isEditing => widget.activity != null;
@@ -34,6 +35,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _descriptionController.text = widget.activity!.description ?? '';
       _selectedHour = widget.activity!.hour;
       _selectedMinute = widget.activity!.minute;
+      _selectedStartDate = widget.activity!.startDate;
       _selectedDays = List<bool>.from(widget.activity!.weeklyDays);
     }
   }
@@ -220,6 +222,19 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
                         const SizedBox(height: 20),
 
+                        // Date de début
+                        SlideFadeIn(
+                          delay: const Duration(milliseconds: 600),
+                          child: _buildLabel(t.startDate),
+                        ),
+                        const SizedBox(height: 8),
+                        SlideFadeIn(
+                          delay: const Duration(milliseconds: 650),
+                          child: _buildStartDatePicker(t),
+                        ),
+
+                        const SizedBox(height: 20),
+
                         // Jours
                         SlideFadeIn(
                           delay: const Duration(milliseconds: 600),
@@ -331,6 +346,57 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     );
   }
 
+  Widget _buildStartDatePicker(AppLocalizations t) {
+    final today = DateTime.now();
+    final isToday =
+        _selectedStartDate.year == today.year &&
+        _selectedStartDate.month == today.month &&
+        _selectedStartDate.day == today.day;
+    final label = isToday
+        ? t.today
+        : '${_selectedStartDate.day} ${t.monthName(_selectedStartDate.month)} ${_selectedStartDate.year}';
+
+    return GestureDetector(
+      onTap: _selectStartDate,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.bgCardLight, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.purple.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.calendar_month_rounded,
+                color: AppColors.purple,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildDaysSelector(AppLocalizations t) {
     return Container(
       padding: const EdgeInsets.all(12),
@@ -376,6 +442,41 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     );
   }
 
+  Future<void> _selectStartDate() async {
+    final today = DateTime.now();
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    final firstDate = _selectedStartDate.isBefore(todayOnly)
+        ? _selectedStartDate
+        : todayOnly;
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: firstDate,
+      lastDate: todayOnly.add(const Duration(days: 3650)),
+      initialDate: _selectedStartDate.isBefore(firstDate)
+          ? firstDate
+          : _selectedStartDate,
+      helpText: AppLocalizations.of(context).chooseDate,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: Theme.of(context).colorScheme.copyWith(
+              primary: AppColors.purple,
+              onPrimary: Colors.white,
+              surface: AppColors.bgCard,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedStartDate = picked;
+        _selectedDays[picked.weekday - 1] = true;
+      });
+    }
+  }
+
   Future<void> _selectTime() async {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -409,6 +510,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         hour: _selectedHour,
         minute: _selectedMinute,
         weeklyDays: _selectedDays,
+        startDate: _selectedStartDate,
       );
       await provider.updateActivity(updated);
     } else {
@@ -420,6 +522,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
         hour: _selectedHour,
         minute: _selectedMinute,
         weeklyDays: _selectedDays,
+        startDate: _selectedStartDate,
       );
       await provider.addActivity(newActivity);
     }
