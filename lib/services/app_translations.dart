@@ -85,6 +85,9 @@ class AppLocalizations {
   String get scheduledTime => _fr ? 'Heure prévue' : 'Scheduled Time';
   String get startDate => _fr ? 'Date de début' : 'Start date';
   String get chooseDate => _fr ? 'Choisir une date' : 'Choose a date';
+  String get pastDateNotAllowed => _fr
+      ? 'Une nouvelle activité doit commencer aujourd’hui ou plus tard.'
+      : 'A new activity must start today or later.';
   String get today => _fr ? "Aujourd'hui" : 'Today';
   String get repeat => _fr ? 'Répéter' : 'Repeat';
   String get save => _fr ? 'Enregistrer' : 'Save Changes';

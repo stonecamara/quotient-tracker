@@ -72,7 +72,12 @@ class ActivityProvider with ChangeNotifier {
     ];
   }
 
-  void _validate(Activity activity) {
+  void _validate(Activity activity, {required bool allowPastStartDate}) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (!allowPastStartDate && activity.startDate.isBefore(today)) {
+      throw ArgumentError('La date de début ne peut pas être dans le passé');
+    }
     if (activity.name.trim().isEmpty) {
       throw ArgumentError('Le nom de l’activité est obligatoire');
     }
@@ -89,7 +94,7 @@ class ActivityProvider with ChangeNotifier {
   }
 
   Future<void> addActivity(Activity activity) async {
-    _validate(activity);
+    _validate(activity, allowPastStartDate: false);
     await StorageService.saveActivity(activity);
     _activities = [..._activities, activity];
     await NotificationService.scheduleActivityNotification(activity);
@@ -97,7 +102,7 @@ class ActivityProvider with ChangeNotifier {
   }
 
   Future<void> updateActivity(Activity activity) async {
-    _validate(activity);
+    _validate(activity, allowPastStartDate: true);
     final index = _activities.indexWhere((a) => a.id == activity.id);
     if (index == -1) return;
 

@@ -492,6 +492,18 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
   Future<void> _saveActivity() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    if (!isEditing && _selectedStartDate.isBefore(today)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).pastDateNotAllowed),
+        ),
+      );
+      return;
+    }
+
     if (!_selectedDays.contains(true)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Sélectionnez au moins un jour.')),
