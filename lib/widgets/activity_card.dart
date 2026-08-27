@@ -51,6 +51,39 @@ class _ActivityCardState extends State<ActivityCard> {
         value.contains('manger')) {
       return Icons.restaurant_rounded;
     }
+    if (value.contains('médit') ||
+        value.contains('medit') ||
+        value.contains('yoga')) {
+      return Icons.self_improvement_rounded;
+    }
+    if (value.contains('dorm') ||
+        value.contains('sommeil') ||
+        value.contains('coucher')) {
+      return Icons.bedtime_rounded;
+    }
+    if (value.contains('marche') ||
+        value.contains('promenade') ||
+        value.contains('run')) {
+      return Icons.directions_walk_rounded;
+    }
+    if (value.contains('eau') || value.contains('boire')) {
+      return Icons.water_drop_rounded;
+    }
+    if (value.contains('étude') ||
+        value.contains('etude') ||
+        value.contains('apprendre')) {
+      return Icons.school_rounded;
+    }
+    if (value.contains('ménage') ||
+        value.contains('menage') ||
+        value.contains('nettoy')) {
+      return Icons.cleaning_services_rounded;
+    }
+    if (value.contains('téléphone') ||
+        value.contains('telephone') ||
+        value.contains('appel')) {
+      return Icons.phone_rounded;
+    }
     return Icons.auto_awesome_rounded;
   }
 
@@ -65,6 +98,21 @@ class _ActivityCardState extends State<ActivityCard> {
     if (value.contains('travail') || value.contains('code')) {
       return AppColors.pastelPink;
     }
+    if (value.contains('dorm') ||
+        value.contains('sommeil') ||
+        value.contains('coucher')) {
+      return AppColors.pastelBlue;
+    }
+    if (value.contains('cuisine') ||
+        value.contains('repas') ||
+        value.contains('manger')) {
+      return AppColors.pastelYellow;
+    }
+    if (value.contains('ménage') ||
+        value.contains('menage') ||
+        value.contains('nettoy')) {
+      return AppColors.pastelOrange;
+    }
     return AppColors.purpleSoft;
   }
 
@@ -78,6 +126,21 @@ class _ActivityCardState extends State<ActivityCard> {
     }
     if (value.contains('travail') || value.contains('code')) {
       return const Color(0xFFE676A0);
+    }
+    if (value.contains('dorm') ||
+        value.contains('sommeil') ||
+        value.contains('coucher')) {
+      return const Color(0xFF269CE8);
+    }
+    if (value.contains('cuisine') ||
+        value.contains('repas') ||
+        value.contains('manger')) {
+      return const Color(0xFFE1A43E);
+    }
+    if (value.contains('ménage') ||
+        value.contains('menage') ||
+        value.contains('nettoy')) {
+      return const Color(0xFFE89A3D);
     }
     return AppColors.purple;
   }
@@ -207,35 +270,52 @@ class _ActivityCardState extends State<ActivityCard> {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  GestureDetector(
-                    onTapDown: (_) => setState(() => _pressed = true),
-                    onTapCancel: () => setState(() => _pressed = false),
-                    onTap: () {
-                      setState(() => _pressed = false);
-                      widget.onToggle();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: completed
-                            ? AppColors.bgCardCompleted
-                            : AppColors.pastelBlue,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        completed
-                            ? (t.isFrench ? 'Fait' : 'Done')
-                            : (t.isFrench ? 'À faire' : 'To-do'),
-                        style: TextStyle(
+                  Semantics(
+                    button: true,
+                    label: completed
+                        ? (t.isFrench ? 'Tâche terminée' : 'Completed task')
+                        : (t.isFrench
+                              ? 'Marquer comme terminée'
+                              : 'Mark as completed'),
+                    child: GestureDetector(
+                      onTapDown: (_) => setState(() => _pressed = true),
+                      onTapCancel: () => setState(() => _pressed = false),
+                      onTap: () {
+                        setState(() => _pressed = false);
+                        widget.onToggle();
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 180),
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
                           color: completed
-                              ? AppColors.success
-                              : const Color(0xFF3498D6),
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
+                              ? AppColors.purple
+                              : Colors.transparent,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: completed
+                                ? AppColors.purple
+                                : AppColors.textMuted,
+                            width: 2,
+                          ),
+                          boxShadow: completed
+                              ? const [
+                                  BoxShadow(
+                                    color: AppColors.purpleGlow,
+                                    blurRadius: 8,
+                                    offset: Offset(0, 3),
+                                  ),
+                                ]
+                              : null,
                         ),
+                        child: completed
+                            ? const Icon(
+                                Icons.check_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              )
+                            : null,
                       ),
                     ),
                   ),
