@@ -38,6 +38,17 @@ void main() {
     expect(activity.isScheduledFor(DateTime(2026, 8, 28)), isTrue);
   });
 
+  test('une activité programmée aujourd’hui n’apparaît pas demain', () {
+    final today = DateTime(2026, 8, 27);
+    final activity = makeActivity(
+      startDate: today,
+      days: <bool>[false, false, false, true, false, false, false],
+    );
+
+    expect(activity.isScheduledFor(today), isTrue);
+    expect(activity.isScheduledFor(DateTime(2026, 8, 28)), isFalse);
+  });
+
   test('une ancienne activité sans startDate reste lisible', () {
     final activity = Activity.fromMap({
       'id': 'legacy-id',

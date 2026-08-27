@@ -23,7 +23,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   int _selectedHour = TimeOfDay.now().hour;
   int _selectedMinute = TimeOfDay.now().minute;
   DateTime _selectedStartDate = DateTime.now();
-  List<bool> _selectedDays = [true, true, true, true, true, false, false];
+  List<bool> _selectedDays = List<bool>.filled(7, false);
 
   bool get isEditing => widget.activity != null;
 
@@ -37,6 +37,8 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _selectedMinute = widget.activity!.minute;
       _selectedStartDate = widget.activity!.startDate;
       _selectedDays = List<bool>.from(widget.activity!.weeklyDays);
+    } else {
+      _selectedDays[DateTime.now().weekday - 1] = true;
     }
   }
 
@@ -472,6 +474,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     if (picked != null) {
       setState(() {
         _selectedStartDate = picked;
+        _selectedDays = List<bool>.filled(7, false);
         _selectedDays[picked.weekday - 1] = true;
       });
     }
