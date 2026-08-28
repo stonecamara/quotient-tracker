@@ -36,7 +36,11 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _descriptionController.text = widget.activity!.description ?? '';
       _selectedHour = widget.activity!.hour;
       _selectedMinute = widget.activity!.minute;
-      _selectedStartDate = widget.activity!.startDate;
+      final storedStartDate = widget.activity!.startDate;
+      final today = _todayOnly();
+      _selectedStartDate = storedStartDate.isBefore(today)
+          ? today
+          : storedStartDate;
       _repeatsWeekly = widget.activity!.repeatsWeekly;
       _selectedDays = List<bool>.from(widget.activity!.weeklyDays);
     } else {
@@ -482,18 +486,20 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
     );
   }
 
+  DateTime _todayOnly() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, now.day);
+  }
+
   Future<void> _selectStartDate() async {
     final today = DateTime.now();
     final todayOnly = DateTime(today.year, today.month, today.day);
-    final firstDate = _selectedStartDate.isBefore(todayOnly)
-        ? _selectedStartDate
-        : todayOnly;
     final picked = await showDatePicker(
       context: context,
-      firstDate: firstDate,
+      firstDate: todayOnly,
       lastDate: todayOnly.add(const Duration(days: 3650)),
-      initialDate: _selectedStartDate.isBefore(firstDate)
-          ? firstDate
+      initialDate: _selectedStartDate.isBefore(todayOnly)
+          ? todayOnly
           : _selectedStartDate,
       helpText: AppLocalizations.of(context).chooseDate,
       builder: (context, child) {
@@ -536,7 +542,7 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
 
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    if (!isEditing && _selectedStartDate.isBefore(today)) {
+    if (_selectedStartDate.isBefore(today)) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context).pastDateNotAllowed),

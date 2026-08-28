@@ -188,7 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
     List<DateTime> dates,
   ) {
     final selectedDate = dates[_selectedDateIndex];
-    final activities = provider.activitiesForDate(selectedDate);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final isPast = selectedDate.isBefore(today);
+    final activities = isPast
+        ? <Activity>[]
+        : provider.activitiesForDate(selectedDate);
     final isToday = _selectedDateIndex == 2;
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
@@ -205,7 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
           child: Text(
-            activities.isEmpty
+            isPast
+                ? (t.isFrench
+                      ? 'Date passée indisponible'
+                      : 'Past dates are unavailable')
+                : activities.isEmpty
                 ? (isToday
                       ? (t.isFrench
                             ? 'Aucune tâche prévue aujourd’hui'
@@ -682,18 +691,27 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: dates.length,
         separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) {
-          final selected = index == _selectedDateIndex;
           final date = dates[index];
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final isPast = date.isBefore(today);
+          final selected = index == _selectedDateIndex && !isPast;
           return GestureDetector(
-            onTap: () => setState(() {
-              _selectedDateIndex = index;
-              _selectedNav = 1;
-            }),
+            onTap: isPast
+                ? null
+                : () => setState(() {
+                    _selectedDateIndex = index;
+                    _selectedNav = 1;
+                  }),
             child: Container(
               width: 62,
               padding: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: selected ? AppColors.purple : AppColors.bgCard,
+                color: selected
+                    ? AppColors.purple
+                    : isPast
+                    ? AppColors.bgCard.withValues(alpha: 0.45)
+                    : AppColors.bgCard,
                 borderRadius: BorderRadius.circular(18),
                 boxShadow: selected
                     ? const [
@@ -713,6 +731,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       color: selected
                           ? Colors.white70
+                          : isPast
+                          ? AppColors.textMuted.withValues(alpha: 0.55)
                           : AppColors.textSecondary,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -722,7 +742,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     '${date.day}',
                     style: TextStyle(
-                      color: selected ? Colors.white : AppColors.textPrimary,
+                      color: selected
+                          ? Colors.white
+                          : isPast
+                          ? AppColors.textMuted.withValues(alpha: 0.55)
+                          : AppColors.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                     ),
@@ -733,6 +757,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       color: selected
                           ? Colors.white70
+                          : isPast
+                          ? AppColors.textMuted.withValues(alpha: 0.55)
                           : AppColors.textSecondary,
                       fontSize: 10,
                     ),
