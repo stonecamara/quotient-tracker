@@ -27,11 +27,14 @@ dev_dependencies:
 flutter_launcher_icons:
   image_path: "assets/logo.png"
   android: "launcher_icon"
+  ios: true
+  remove_alpha_ios: true
   adaptive_icon_background: "#6C63FF"
   adaptive_icon_foreground: "assets/logo_foreground.png"
 
 flutter:
   uses-material-design: true
   assets:
+    - assets/logo.png
     - assets/avatar_male.png
     - assets/avatar_female.png
