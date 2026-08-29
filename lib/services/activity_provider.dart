@@ -11,16 +11,13 @@ class ActivityProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   List<Activity> get todayActivities {
-    final result = _activities.where((a) => a.isScheduledForToday).toList();
-    result.sort((a, b) {
-      final byHour = a.hour.compareTo(b.hour);
-      return byHour != 0 ? byHour : a.minute.compareTo(b.minute);
-    });
-    return result;
+    return activitiesForDate(DateTime.now());
   }
 
-  List<Activity> get completedToday =>
-      todayActivities.where((a) => a.isCompletedToday).toList();
+  List<Activity> get completedToday {
+    final today = DateTime.now();
+    return todayActivities.where((a) => a.isCompletedOn(today)).toList();
+  }
 
   List<Activity> activitiesForDate(DateTime date) {
     final result = _activities
@@ -33,8 +30,10 @@ class ActivityProvider with ChangeNotifier {
     return result;
   }
 
-  List<Activity> get pendingToday =>
-      todayActivities.where((a) => !a.isCompletedToday).toList();
+  List<Activity> get pendingToday {
+    final today = DateTime.now();
+    return todayActivities.where((a) => !a.isCompletedOn(today)).toList();
+  }
 
   int get quotient {
     if (todayActivities.isEmpty) return 0;
@@ -47,29 +46,10 @@ class ActivityProvider with ChangeNotifier {
     notifyListeners();
     try {
       _activities = await StorageService.getActivities();
-      await _checkDailyReset();
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-  }
-
-  Future<void> _checkDailyReset() async {
-    final lastReset = await StorageService.getLastResetDate();
-    final now = DateTime.now();
-    final isNewDay =
-        lastReset == null ||
-        lastReset.year != now.year ||
-        lastReset.month != now.month ||
-        lastReset.day != now.day;
-
-    if (!isNewDay) return;
-    await StorageService.resetDailyCompletions();
-    await StorageService.saveLastResetDate(now);
-    _activities = [
-      for (final activity in _activities)
-        activity.copyWith(isCompletedToday: false),
-    ];
   }
 
   void _validate(Activity activity) {
@@ -120,23 +100,25 @@ class ActivityProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleActivityCompletion(String id) async {
+  Future<void> toggleActivityCompletion(String id, {DateTime? date}) async {
+    final targetDate = _dateOnly(date ?? DateTime.now());
+    final today = _dateOnly(DateTime.now());
+    if (targetDate.isBefore(today)) return;
+
     final index = _activities.indexWhere((a) => a.id == id);
     if (index == -1) return;
 
     final previous = _activities[index];
-    final updated = previous.copyWith(
-      isCompletedToday: !previous.isCompletedToday,
+    final updated = previous.withCompletionForDate(
+      targetDate,
+      !previous.isCompletedOn(targetDate),
     );
     _activities = [..._activities]..[index] = updated;
     notifyListeners();
 
     try {
-      await StorageService.updateActivityCompletion(
-        id,
-        updated.isCompletedToday,
-      );
-      if (updated.isCompletedToday) {
+      await StorageService.saveActivity(updated);
+      if (updated.isCompletedOn(targetDate)) {
         await NotificationService.cancelNotification(id);
       } else {
         await NotificationService.scheduleActivityNotification(updated);
@@ -146,5 +128,9 @@ class ActivityProvider with ChangeNotifier {
       notifyListeners();
       debugPrint('toggleActivityCompletion error: $error');
     }
+  }
+
+  static DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 }

@@ -5,9 +5,10 @@ import '../theme/app_colors.dart';
 
 class ActivityCard extends StatefulWidget {
   final Activity activity;
-  final VoidCallback onToggle;
-  final VoidCallback onDelete;
-  final VoidCallback onEdit;
+  final VoidCallback? onToggle;
+  final VoidCallback? onDelete;
+  final VoidCallback? onEdit;
+  final bool? completed;
 
   const ActivityCard({
     super.key,
@@ -15,6 +16,7 @@ class ActivityCard extends StatefulWidget {
     required this.onToggle,
     required this.onDelete,
     required this.onEdit,
+    this.completed,
   });
 
   @override
@@ -149,7 +151,7 @@ class _ActivityCardState extends State<ActivityCard> {
   Widget build(BuildContext context) {
     final t = AppLocalizations.of(context);
     final activity = widget.activity;
-    final completed = activity.isCompletedToday;
+    final completed = widget.completed ?? activity.isCompletedToday;
     final iconColor = _iconColor(activity.name);
 
     return Padding(
@@ -253,25 +255,29 @@ class _ActivityCardState extends State<ActivityCard> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  PopupMenuButton<String>(
-                    padding: EdgeInsets.zero,
-                    icon: const Icon(
-                      Icons.more_horiz_rounded,
-                      color: AppColors.textMuted,
-                      size: 20,
+                  if (widget.onEdit != null || widget.onDelete != null)
+                    PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
+                      icon: const Icon(
+                        Icons.more_horiz_rounded,
+                        color: AppColors.textMuted,
+                        size: 20,
+                      ),
+                      onSelected: (value) {
+                        if (value == 'edit') widget.onEdit?.call();
+                        if (value == 'delete') widget.onDelete?.call();
+                      },
+                      itemBuilder: (_) => [
+                        if (widget.onEdit != null)
+                          PopupMenuItem(value: 'edit', child: Text(t.editTask)),
+                        if (widget.onDelete != null)
+                          PopupMenuItem(value: 'delete', child: Text(t.delete)),
+                      ],
                     ),
-                    onSelected: (value) {
-                      if (value == 'edit') widget.onEdit();
-                      if (value == 'delete') widget.onDelete();
-                    },
-                    itemBuilder: (_) => [
-                      PopupMenuItem(value: 'edit', child: Text(t.editTask)),
-                      PopupMenuItem(value: 'delete', child: Text(t.delete)),
-                    ],
-                  ),
                   const SizedBox(height: 4),
                   Semantics(
-                    button: true,
+                    button: widget.onToggle != null,
+                    enabled: widget.onToggle != null,
                     label: completed
                         ? (t.isFrench ? 'Tâche terminée' : 'Completed task')
                         : (t.isFrench
@@ -280,10 +286,12 @@ class _ActivityCardState extends State<ActivityCard> {
                     child: GestureDetector(
                       onTapDown: (_) => setState(() => _pressed = true),
                       onTapCancel: () => setState(() => _pressed = false),
-                      onTap: () {
-                        setState(() => _pressed = false);
-                        widget.onToggle();
-                      },
+                      onTap: widget.onToggle == null
+                          ? null
+                          : () {
+                              setState(() => _pressed = false);
+                              widget.onToggle?.call();
+                            },
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 180),
                         width: 34,

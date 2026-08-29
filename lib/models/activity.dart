@@ -11,9 +11,9 @@ class Activity {
   final int minute;
   final List<bool> weeklyDays;
   final bool repeatsWeekly;
-  final bool isCompletedToday;
   final DateTime createdAt;
   final DateTime startDate;
+  final List<String> completedDates;
 
   Activity({
     required this.id,
@@ -23,11 +23,14 @@ class Activity {
     required this.minute,
     required List<bool> weeklyDays,
     this.repeatsWeekly = false,
-    this.isCompletedToday = false,
     required this.createdAt,
     DateTime? startDate,
+    Iterable<String> completedDates = const [],
   }) : weeklyDays = List<bool>.unmodifiable(weeklyDays),
-       startDate = _dateOnly(startDate ?? createdAt);
+       startDate = _dateOnly(startDate ?? createdAt),
+       completedDates = List<String>.unmodifiable(
+         completedDates.where((value) => value.isNotEmpty).toSet(),
+       );
 
   factory Activity.create({
     required String name,
@@ -59,8 +62,8 @@ class Activity {
     int? minute,
     List<bool>? weeklyDays,
     bool? repeatsWeekly,
-    bool? isCompletedToday,
     DateTime? startDate,
+    Iterable<String>? completedDates,
   }) {
     return Activity(
       id: id,
@@ -72,9 +75,9 @@ class Activity {
       minute: minute ?? this.minute,
       weeklyDays: weeklyDays ?? this.weeklyDays,
       repeatsWeekly: repeatsWeekly ?? this.repeatsWeekly,
-      isCompletedToday: isCompletedToday ?? this.isCompletedToday,
       createdAt: createdAt,
       startDate: startDate ?? this.startDate,
+      completedDates: completedDates ?? this.completedDates,
     );
   }
 
@@ -88,6 +91,7 @@ class Activity {
       'weeklyDays': weeklyDays,
       'repeatsWeekly': repeatsWeekly,
       'isCompletedToday': isCompletedToday,
+      'completedDates': completedDates,
       'createdAt': createdAt.toIso8601String(),
       'startDate': startDate.toIso8601String(),
     };
@@ -103,6 +107,17 @@ class Activity {
     final startDate = storedStartDate is String
         ? DateTime.tryParse(storedStartDate)
         : null;
+    final storedCompletedDates = map['completedDates'];
+    final completedDates = <String>{
+      if (storedCompletedDates is List)
+        ...storedCompletedDates.whereType<String>(),
+    };
+
+    // Migration des anciennes données qui ne connaissaient que
+    // isCompletedToday : cette validation appartient à la date actuelle.
+    if (map['isCompletedToday'] == true) {
+      completedDates.add(_dateKey(DateTime.now()));
+    }
 
     return Activity(
       id: map['id'] as String,
@@ -111,13 +126,10 @@ class Activity {
       hour: map['hour'] as int,
       minute: map['minute'] as int,
       weeklyDays: days,
-      // Les anciennes données représentaient aussi les activités uniques avec
-      // une liste de jours. Elles deviennent uniques par défaut pour éviter
-      // qu’une activité passée ne réapparaisse sur les jours voisins.
       repeatsWeekly: map['repeatsWeekly'] as bool? ?? false,
-      isCompletedToday: map['isCompletedToday'] as bool? ?? false,
       createdAt: createdAt,
       startDate: startDate ?? createdAt,
+      completedDates: completedDates,
     );
   }
 
@@ -132,9 +144,31 @@ class Activity {
     return !day.isBefore(startDate) && weeklyDays[day.weekday - 1];
   }
 
-  bool get isScheduledForToday => isScheduledFor(DateTime.now());
+  bool isCompletedOn(DateTime date) {
+    return completedDates.contains(_dateKey(date));
+  }
+
+  bool get isCompletedToday => isCompletedOn(DateTime.now());
+
+  Activity withCompletionForDate(DateTime date, bool completed) {
+    final key = _dateKey(date);
+    final values = completedDates.toSet();
+    if (completed) {
+      values.add(key);
+    } else {
+      values.remove(key);
+    }
+    return copyWith(completedDates: values);
+  }
 
   static DateTime _dateOnly(DateTime value) {
     return DateTime(value.year, value.month, value.day);
+  }
+
+  static String _dateKey(DateTime value) {
+    final day = _dateOnly(value);
+    return '${day.year.toString().padLeft(4, '0')}-'
+        '${day.month.toString().padLeft(2, '0')}-'
+        '${day.day.toString().padLeft(2, '0')}';
   }
 }

@@ -41,37 +41,22 @@ class StorageService {
 
   static Future<void> updateActivityCompletion(
     String id,
-    bool isCompleted,
-  ) async {
+    bool isCompleted, {
+    DateTime? date,
+  }) async {
     final data = activitiesBox.get(id);
     if (data is Map) {
       final activity = Activity.fromMap(Map<String, dynamic>.from(data));
-      await activitiesBox.put(
-        id,
-        activity.copyWith(isCompletedToday: isCompleted).toMap(),
+      final targetDate = date ?? DateTime.now();
+      await saveActivity(
+        activity.withCompletionForDate(targetDate, isCompleted),
       );
     }
   }
 
-  static Future<void> resetDailyCompletions() async {
-    final box = activitiesBox;
-    for (var i = 0; i < box.length; i++) {
-      final data = box.getAt(i);
-      if (data is Map) {
-        try {
-          final activity = Activity.fromMap(Map<String, dynamic>.from(data));
-          await box.putAt(
-            i,
-            activity.copyWith(isCompletedToday: false).toMap(),
-          );
-        } on FormatException {
-          // Conserver l’entrée invalide pour permettre une migration ultérieure.
-        } on TypeError {
-          // Conserver l’entrée invalide pour permettre une migration ultérieure.
-        }
-      }
-    }
-  }
+  // Conservée pour compatibilité avec les anciennes versions. L’historique
+  // des validations ne doit plus être effacé au changement de journée.
+  static Future<void> resetDailyCompletions() async {}
 
   static Future<void> saveLastResetDate(DateTime date) async {
     await Hive.box(_settingsBox).put('lastResetDate', date.toIso8601String());

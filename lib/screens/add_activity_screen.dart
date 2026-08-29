@@ -8,8 +8,9 @@ import '../widgets/animated_widgets.dart';
 
 class AddActivityScreen extends StatefulWidget {
   final Activity? activity;
+  final DateTime? initialDate;
 
-  const AddActivityScreen({super.key, this.activity});
+  const AddActivityScreen({super.key, this.activity, this.initialDate});
 
   @override
   State<AddActivityScreen> createState() => _AddActivityScreenState();
@@ -44,7 +45,9 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
       _repeatsWeekly = widget.activity!.repeatsWeekly;
       _selectedDays = List<bool>.from(widget.activity!.weeklyDays);
     } else {
-      _selectedDays[DateTime.now().weekday - 1] = true;
+      final initialDate = widget.initialDate ?? DateTime.now();
+      _selectedStartDate = _dateOnly(initialDate);
+      _selectedDays[_selectedStartDate.weekday - 1] = true;
     }
   }
 
@@ -489,6 +492,10 @@ class _AddActivityScreenState extends State<AddActivityScreen> {
   DateTime _todayOnly() {
     final now = DateTime.now();
     return DateTime(now.year, now.month, now.day);
+  }
+
+  DateTime _dateOnly(DateTime value) {
+    return DateTime(value.year, value.month, value.day);
   }
 
   Future<void> _selectStartDate() async {

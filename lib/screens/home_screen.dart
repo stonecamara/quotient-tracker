@@ -21,8 +21,20 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _filter = 'all';
   int _selectedNav = 0;
-  int _selectedDateIndex = 2;
+  int _selectedDateIndex = 3;
+  DateTime _selectedCalendarDate = DateTime.now();
   late final ScrollController _scrollController;
+
+  bool get _selectedCalendarDateIsPast {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final selected = DateTime(
+      _selectedCalendarDate.year,
+      _selectedCalendarDate.month,
+      _selectedCalendarDate.day,
+    );
+    return selected.isBefore(today);
+  }
 
   @override
   void initState() {
@@ -47,10 +59,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _openAddActivity() async {
+  Future<void> _openAddActivity({DateTime? initialDate}) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const AddActivityScreen()),
+      MaterialPageRoute(
+        builder: (_) => AddActivityScreen(initialDate: initialDate),
+      ),
     );
   }
 
@@ -93,10 +107,9 @@ class _HomeScreenState extends State<HomeScreen> {
             final activities = _visibleActivities(provider);
             final now = DateTime.now();
             final dates = List.generate(
-              5,
-              (index) => DateTime(now.year, now.month, now.day + index - 2),
+              7,
+              (index) => DateTime(now.year, now.month, now.day + index - 3),
             );
-
             return CustomScrollView(
               controller: _scrollController,
               physics: const BouncingScrollPhysics(),
@@ -114,8 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        onPressed: _openAddActivity,
-        backgroundColor: AppColors.purple,
+        onPressed: _selectedNav == 1 && _selectedCalendarDateIsPast
+            ? null
+            : () => _openAddActivity(
+                initialDate: _selectedNav == 1 ? _selectedCalendarDate : null,
+              ),
+        backgroundColor: _selectedNav == 1 && _selectedCalendarDateIsPast
+            ? AppColors.textMuted
+            : AppColors.purple,
         foregroundColor: Colors.white,
         elevation: 8,
         shape: const CircleBorder(),
@@ -169,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
             final activity = activities[index];
             return ActivityCard(
               activity: activity,
+              completed: activity.isCompletedToday,
               onToggle: () => provider.toggleActivityCompletion(activity.id),
               onDelete: () => _showDeleteDialog(context, provider, activity.id),
               onEdit: () => _openEditActivity(activity),
@@ -190,10 +210,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isPast = selectedDate.isBefore(today);
-    final activities = isPast
-        ? <Activity>[]
-        : provider.activitiesForDate(selectedDate);
-    final isToday = _selectedDateIndex == 2;
+    final activities = provider.activitiesForDate(selectedDate);
+    final isToday = selectedDate == today;
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
       SliverToBoxAdapter(
@@ -211,8 +229,8 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Text(
             isPast
                 ? (t.isFrench
-                      ? 'Date passée indisponible'
-                      : 'Past dates are unavailable')
+                      ? 'Historique du ${selectedDate.day} ${t.monthName(selectedDate.month)}'
+                      : 'History for ${t.monthName(selectedDate.month)} ${selectedDate.day}')
                 : activities.isEmpty
                 ? (isToday
                       ? (t.isFrench
@@ -242,9 +260,17 @@ class _HomeScreenState extends State<HomeScreen> {
             final activity = activities[index];
             return ActivityCard(
               activity: activity,
-              onToggle: () => provider.toggleActivityCompletion(activity.id),
-              onDelete: () => _showDeleteDialog(context, provider, activity.id),
-              onEdit: () => _openEditActivity(activity),
+              completed: activity.isCompletedOn(selectedDate),
+              onToggle: isPast
+                  ? null
+                  : () => provider.toggleActivityCompletion(
+                      activity.id,
+                      date: selectedDate,
+                    ),
+              onDelete: isPast
+                  ? null
+                  : () => _showDeleteDialog(context, provider, activity.id),
+              onEdit: isPast ? null : () => _openEditActivity(activity),
             );
           }, childCount: activities.length),
         ),
@@ -830,14 +856,13 @@ class _HomeScreenState extends State<HomeScreen> {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
           final isPast = date.isBefore(today);
-          final selected = index == _selectedDateIndex && !isPast;
+          final selected = index == _selectedDateIndex;
           return GestureDetector(
-            onTap: isPast
-                ? null
-                : () => setState(() {
-                    _selectedDateIndex = index;
-                    _selectedNav = 1;
-                  }),
+            onTap: () => setState(() {
+              _selectedDateIndex = index;
+              _selectedCalendarDate = date;
+              _selectedNav = 1;
+            }),
             child: Container(
               width: 62,
               padding: const EdgeInsets.symmetric(vertical: 10),

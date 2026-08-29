@@ -123,4 +123,29 @@ void main() {
       isNull,
     );
   });
+
+  test('les validations sont conservées séparément par date', () {
+    final activity = makeActivity();
+    final yesterday = DateTime(2026, 8, 26);
+    final today = DateTime(2026, 8, 27);
+
+    final completedYesterday = activity.withCompletionForDate(yesterday, true);
+
+    expect(completedYesterday.isCompletedOn(yesterday), isTrue);
+    expect(completedYesterday.isCompletedOn(today), isFalse);
+  });
+
+  test('décocher une date ne modifie pas les autres validations', () {
+    final activity = makeActivity()
+        .withCompletionForDate(DateTime(2026, 8, 26), true)
+        .withCompletionForDate(DateTime(2026, 8, 27), true);
+
+    final updated = activity.withCompletionForDate(
+      DateTime(2026, 8, 27),
+      false,
+    );
+
+    expect(updated.isCompletedOn(DateTime(2026, 8, 26)), isTrue);
+    expect(updated.isCompletedOn(DateTime(2026, 8, 27)), isFalse);
+  });
 }
