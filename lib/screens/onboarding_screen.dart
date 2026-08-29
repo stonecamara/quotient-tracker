@@ -258,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Illustration d’usage de l’application
+              // Illustration intégrée directement dans le fond Figma
               ScaleTransition(
                 scale: _logoScale,
                 child: AnimatedBuilder(
@@ -266,29 +266,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   builder: (context, _) {
                     return Transform.scale(
                       scale: _breathingScale.value,
-                      child: Container(
-                        width: 244,
-                        height: 210,
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: AppColors.purpleSoft,
-                          borderRadius: BorderRadius.circular(32),
-                          border: Border.all(
-                            color: AppColors.purple.withValues(alpha: 0.16),
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.purple.withValues(alpha: 0.12),
-                              blurRadius: 24,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Image.asset(
-                          'assets/onboarding_illustration.png',
-                          fit: BoxFit.contain,
-                        ),
+                      child: Image.asset(
+                        'assets/onboarding_illustration.png',
+                        width: 270,
+                        height: 276,
+                        fit: BoxFit.cover,
                       ),
                     );
                   },
