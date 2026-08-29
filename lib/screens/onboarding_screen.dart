@@ -258,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo animé
+              // Illustration d’usage de l’application
               ScaleTransition(
                 scale: _logoScale,
                 child: AnimatedBuilder(
@@ -267,28 +267,27 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     return Transform.scale(
                       scale: _breathingScale.value,
                       child: Container(
-                        width: 140,
-                        height: 140,
+                        width: 244,
+                        height: 210,
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: AppColors.bgCard,
+                          color: AppColors.purpleSoft,
+                          borderRadius: BorderRadius.circular(32),
                           border: Border.all(
-                            color: AppColors.cyan.withValues(alpha: 0.3),
-                            width: 2,
+                            color: AppColors.purple.withValues(alpha: 0.16),
+                            width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.cyan.withValues(alpha: 0.2),
-                              blurRadius: 30,
-                              spreadRadius: 2,
+                              color: AppColors.purple.withValues(alpha: 0.12),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            'assets/logo.png',
-                            fit: BoxFit.cover,
-                          ),
+                        child: Image.asset(
+                          'assets/onboarding_illustration.png',
+                          fit: BoxFit.contain,
                         ),
                       ),
                     );
@@ -577,106 +576,122 @@ class _OnboardingScreenState extends State<OnboardingScreen>
       opacity: _fadeAnims[4],
       child: SlideTransition(
         position: _slideAnims[4],
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Avatar animé
-              AnimatedBuilder(
-                animation: _breathingScale,
-                builder: (context, _) {
-                  return Transform.scale(
-                    scale: _breathingScale.value,
-                    child: Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: AppColors.bgCard,
-                        border: Border.all(
-                          color: AppColors.cyan.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: _userName.isNotEmpty
-                          ? Center(
-                              child: Text(
-                                _userName[0].toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.cyan,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+            return SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: EdgeInsets.only(bottom: keyboardOpen ? 24 : 0),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Column(
+                    mainAxisAlignment: keyboardOpen
+                        ? MainAxisAlignment.start
+                        : MainAxisAlignment.center,
+                    children: [
+                      // Avatar animé
+                      AnimatedBuilder(
+                        animation: _breathingScale,
+                        builder: (context, _) {
+                          return Transform.scale(
+                            scale: _breathingScale.value,
+                            child: Container(
+                              width: 100,
+                              height: 100,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.bgCard,
+                                border: Border.all(
+                                  color: AppColors.cyan.withValues(alpha: 0.3),
+                                  width: 2,
                                 ),
                               ),
-                            )
-                          : const Icon(
-                              Icons.person_rounded,
-                              size: 48,
+                              child: _userName.isNotEmpty
+                                  ? Center(
+                                      child: Text(
+                                        _userName[0].toUpperCase(),
+                                        style: const TextStyle(
+                                          fontSize: 40,
+                                          fontWeight: FontWeight.bold,
+                                          color: AppColors.cyan,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.person_rounded,
+                                      size: 48,
+                                      color: AppColors.textMuted,
+                                    ),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 32),
+                      Text(
+                        t.onboardingTitle4,
+                        style: const TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        t.onboardingSubtitle4,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 36),
+                      // Champ de saisie
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCard,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _nameFocus.hasFocus
+                                ? AppColors.cyan
+                                : AppColors.bgCardLight,
+                            width: 2,
+                          ),
+                        ),
+                        child: TextField(
+                          controller: _nameController,
+                          focusNode: _nameFocus,
+                          onChanged: (v) => setState(() => _userName = v),
+                          textCapitalization: TextCapitalization.words,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: t.onboardingNameHint,
+                            hintStyle: const TextStyle(
                               color: AppColors.textMuted,
                             ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-              Text(
-                t.onboardingTitle4,
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                t.onboardingSubtitle4,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.textSecondary,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 36),
-              // Champ de saisie
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.bgCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: _nameFocus.hasFocus
-                        ? AppColors.cyan
-                        : AppColors.bgCardLight,
-                    width: 2,
-                  ),
-                ),
-                child: TextField(
-                  controller: _nameController,
-                  focusNode: _nameFocus,
-                  onChanged: (v) => setState(() => _userName = v),
-                  textCapitalization: TextCapitalization.words,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: t.onboardingNameHint,
-                    hintStyle: const TextStyle(color: AppColors.textMuted),
-                    prefixIcon: const Icon(
-                      Icons.person_outline_rounded,
-                      color: AppColors.textMuted,
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
+                            prefixIcon: const Icon(
+                              Icons.person_outline_rounded,
+                              color: AppColors.textMuted,
+                            ),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

@@ -36,5 +36,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/logo.png
+    - assets/onboarding_illustration.png
     - assets/avatar_male.png
     - assets/avatar_female.png
