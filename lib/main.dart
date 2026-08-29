@@ -9,6 +9,7 @@ import 'services/notification_service.dart';
 import 'services/activity_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/splash_screen.dart';
 import 'theme/app_colors.dart';
 
 Future<void> main() async {
@@ -75,9 +76,11 @@ class MyApp extends StatelessWidget {
                   elevation: 0,
                 ),
               ),
-              home: showOnboarding
-                  ? const OnboardingScreen()
-                  : const HomeScreen(),
+              home: SplashScreen(
+                nextScreen: showOnboarding
+                    ? const OnboardingScreen()
+                    : const HomeScreen(),
+              ),
             ),
           );
         },
