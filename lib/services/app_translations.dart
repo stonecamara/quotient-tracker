@@ -38,7 +38,15 @@ class AppLocalizations {
   String get onboardingSubtitle4 => _fr
       ? 'Entrez votre prénom ou pseudo pour personnaliser votre expérience'
       : 'Enter your first name or nickname to personalize your experience';
-  String get onboardingNameHint => _fr ? 'Votre prénom...' : 'Your name...';
+  String get onboardingNameHint => _fr ? 'Votre prénom' : 'Your first name';
+  String get genderTitle => _fr ? 'Choisissez votre sexe' : 'Choose your sex';
+  String get genderSubtitle => _fr
+      ? 'Votre avatar personnalisé vous accompagnera chaque jour.'
+      : 'Your personalized avatar will accompany you every day.';
+  String get genderMale => _fr ? 'Homme' : 'Man';
+  String get genderFemale => _fr ? 'Femme' : 'Woman';
+  String get avatar => _fr ? 'Avatar' : 'Avatar';
+  String get chooseAvatar => _fr ? 'Choisir un avatar' : 'Choose an avatar';
   String get onboardingNameRequired =>
       _fr ? 'Veuillez entrer votre prénom' : 'Please enter your name';
 

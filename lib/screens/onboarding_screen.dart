@@ -18,6 +18,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   final FocusNode _nameFocus = FocusNode();
   int _currentPage = 0;
   String _selectedLang = 'fr';
+  String _selectedGender = 'female';
   String _userName = '';
 
   // ── Animations par page ──
@@ -54,7 +55,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
     _logoController.forward();
 
-    _fadeControllers = List.generate(4, (i) {
+    _fadeControllers = List.generate(5, (i) {
       return AnimationController(
         vsync: this,
         duration: const Duration(milliseconds: 500),
@@ -85,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   void _nextPage() {
-    if (_currentPage < 3) {
+    if (_currentPage < 4) {
       _goToPage(_currentPage + 1);
     } else {
       _finish();
@@ -107,6 +108,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     final settings = Hive.box('settings');
     await settings.put('appLocale', _selectedLang);
     await settings.put('userName', name);
+    await settings.put('userGender', _selectedGender);
     await settings.put('onboardingDone', true);
 
     if (!mounted) return;
@@ -171,6 +173,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         _buildPage1(t),
                         _buildPage2(t),
                         _buildPage3(t),
+                        _buildGenderPage(t),
                         _buildPage4(t),
                       ],
                     ),
@@ -181,7 +184,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
                     child: Row(
                       children: [
-                        ...List.generate(4, (i) {
+                        ...List.generate(5, (i) {
                           return AnimatedContainer(
                             duration: const Duration(milliseconds: 300),
                             margin: const EdgeInsets.only(right: 8),
@@ -216,7 +219,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                               ],
                             ),
                             child: Text(
-                              _currentPage == 3
+                              _currentPage == 4
                                   ? t.onboardingStart
                                   : t.onboardingNext,
                               style: const TextStyle(
@@ -475,13 +478,102 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   }
 
   // ══════════════════════════════════════════════════════════════
-  // PAGE 4 — Prénom / Pseudo
+  // PAGE 4 — Choix de l’avatar
   // ══════════════════════════════════════════════════════════════
-  Widget _buildPage4(AppLocalizations t) {
+  Widget _buildGenderPage(AppLocalizations t) {
     return FadeTransition(
       opacity: _fadeAnims[3],
       child: SlideTransition(
         position: _slideAnims[3],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedBuilder(
+                animation: _floatAnim,
+                builder: (context, _) {
+                  return Transform.translate(
+                    offset: Offset(0, _floatAnim.value),
+                    child: Container(
+                      width: 118,
+                      height: 118,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: AppColors.bgCard,
+                        border: Border.all(
+                          color: AppColors.cyan.withValues(alpha: 0.3),
+                          width: 2,
+                        ),
+                      ),
+                      child: ClipOval(
+                        child: Image.asset(
+                          _selectedGender == 'male'
+                              ? 'assets/avatar_male.png'
+                              : 'assets/avatar_female.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              Text(
+                t.genderTitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                t.genderSubtitle,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: AppColors.textSecondary,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 34),
+              Row(
+                children: [
+                  Expanded(
+                    child: _GenderButton(
+                      label: t.genderFemale,
+                      assetPath: 'assets/avatar_female.png',
+                      isSelected: _selectedGender == 'female',
+                      onTap: () => setState(() => _selectedGender = 'female'),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: _GenderButton(
+                      label: t.genderMale,
+                      assetPath: 'assets/avatar_male.png',
+                      isSelected: _selectedGender == 'male',
+                      onTap: () => setState(() => _selectedGender = 'male'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // PAGE 5 — Prénom / Pseudo
+  // ══════════════════════════════════════════════════════════════
+  Widget _buildPage4(AppLocalizations t) {
+    return FadeTransition(
+      opacity: _fadeAnims[4],
+      child: SlideTransition(
+        position: _slideAnims[4],
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 32),
           child: Column(
@@ -715,6 +807,66 @@ class _LangButton extends StatelessWidget {
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GenderButton extends StatelessWidget {
+  final String label;
+  final String assetPath;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _GenderButton({
+    required this.label,
+    required this.assetPath,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.fromLTRB(10, 12, 10, 14),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.cyan : AppColors.bgCard,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isSelected ? AppColors.cyan : AppColors.bgCardLight,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: AppColors.cyan.withValues(alpha: 0.28),
+                    blurRadius: 14,
+                    offset: const Offset(0, 5),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          children: [
+            SizedBox(
+              width: 74,
+              height: 74,
+              child: ClipOval(child: Image.asset(assetPath, fit: BoxFit.cover)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ],

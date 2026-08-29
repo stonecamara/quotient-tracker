@@ -282,6 +282,8 @@ class _HomeScreenState extends State<HomeScreen> {
     String userName,
   ) {
     final localeService = context.read<LocaleService>();
+    final settings = Hive.box('settings');
+    final gender = settings.get('userGender', defaultValue: 'female') as String;
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
       SliverToBoxAdapter(
@@ -294,7 +296,13 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       SliverToBoxAdapter(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: _buildProfileAvatarCard(context, t, gender),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Container(
             decoration: BoxDecoration(
               color: AppColors.bgCard,
@@ -309,6 +317,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Column(
               children: [
+                _SettingsTile(
+                  icon: Icons.face_retouching_natural_rounded,
+                  title: t.chooseAvatar,
+                  subtitle: gender == 'male' ? t.genderMale : t.genderFemale,
+                  onTap: () => _showGenderDialog(context, t),
+                ),
                 _SettingsTile(
                   icon: Icons.language_rounded,
                   title: t.isFrench ? 'Langue' : 'Language',
@@ -557,6 +571,70 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _avatarAssetFor(String gender) {
+    return gender == 'male'
+        ? 'assets/avatar_male.png'
+        : 'assets/avatar_female.png';
+  }
+
+  Future<void> _showGenderDialog(
+    BuildContext context,
+    AppLocalizations t,
+  ) async {
+    final settings = Hive.box('settings');
+    final current =
+        settings.get('userGender', defaultValue: 'female') as String;
+    final selected = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: Text(t.chooseAvatar),
+        children: [
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'female'),
+            child: Row(
+              children: [
+                _avatarPreview('female', selected: current == 'female'),
+                const SizedBox(width: 12),
+                Text(t.genderFemale),
+              ],
+            ),
+          ),
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, 'male'),
+            child: Row(
+              children: [
+                _avatarPreview('male', selected: current == 'male'),
+                const SizedBox(width: 12),
+                Text(t.genderMale),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+    if (selected != null) {
+      await settings.put('userGender', selected);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Widget _avatarPreview(String gender, {required bool selected}) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: selected ? AppColors.purple : AppColors.bgCardLight,
+          width: selected ? 2 : 1,
+        ),
+      ),
+      child: ClipOval(
+        child: Image.asset(_avatarAssetFor(gender), fit: BoxFit.cover),
+      ),
+    );
+  }
+
   Future<void> _showLanguageDialog(
     BuildContext context,
     LocaleService localeService,
@@ -582,8 +660,68 @@ class _HomeScreenState extends State<HomeScreen> {
     if (selected != null) await localeService.setLocale(selected);
   }
 
+  Widget _buildProfileAvatarCard(
+    BuildContext context,
+    AppLocalizations t,
+    String gender,
+  ) {
+    final settings = Hive.box('settings');
+    final userName = settings.get('userName', defaultValue: '') as String;
+    return GestureDetector(
+      onTap: () => _showGenderDialog(context, t),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.bgCard,
+          borderRadius: BorderRadius.circular(22),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x0D24184A),
+              blurRadius: 18,
+              offset: Offset(0, 7),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            _avatarPreview(gender, selected: true),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    userName.isEmpty ? 'Quotient' : userName,
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    t.isFrench
+                        ? 'Appuyez pour changer votre avatar'
+                        : 'Tap to change your avatar',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, color: AppColors.textMuted),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildHeader(String userName, AppLocalizations t) {
     final displayName = userName.isEmpty ? 'Quotient' : userName;
+    final settings = Hive.box('settings');
+    final gender = settings.get('userGender', defaultValue: 'female') as String;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
       child: Row(
@@ -601,10 +739,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: Colors.white,
-                size: 25,
+              child: ClipOval(
+                child: Image.asset(_avatarAssetFor(gender), fit: BoxFit.cover),
               ),
             ),
           ),
