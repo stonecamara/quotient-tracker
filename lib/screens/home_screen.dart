@@ -160,7 +160,6 @@ class _HomeScreenState extends State<HomeScreen> {
       SliverToBoxAdapter(
         child: _buildSectionHeader(t, provider.todayActivities.length),
       ),
-      SliverToBoxAdapter(child: _buildDateStrip(dates, t)),
       SliverToBoxAdapter(child: _buildFilters(t)),
       if (activities.isEmpty)
         SliverToBoxAdapter(child: _buildEmptyState(t))
