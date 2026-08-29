@@ -16,7 +16,7 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
+      statusBarColor: AppColors.bgDark,
       statusBarIconBrightness: Brightness.dark,
       systemNavigationBarColor: AppColors.bgDark,
       systemNavigationBarIconBrightness: Brightness.dark,

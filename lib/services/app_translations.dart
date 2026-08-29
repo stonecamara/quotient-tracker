@@ -64,8 +64,6 @@ class AppLocalizations {
   String get noTasksHint => _fr
       ? 'Ajoutez votre première tâche pour commencer'
       : 'Add your first task to start tracking';
-  String get notificationTest =>
-      _fr ? 'Notification test envoyée !' : 'Test notification sent!';
   String get batteryHint => _fr
       ? 'Paramètres > Batterie > Quotient > Non restreint'
       : 'Settings > Battery > Quotient > Unrestricted';

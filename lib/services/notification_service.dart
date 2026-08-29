@@ -13,9 +13,7 @@ class NotificationService {
     if (_initialized || defaultTargetPlatform == TargetPlatform.linux) return;
 
     tz.initializeTimeZones();
-    const androidSettings = AndroidInitializationSettings(
-      '@mipmap/ic_launcher',
-    );
+    const androidSettings = AndroidInitializationSettings('ic_notification');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -124,24 +122,13 @@ class NotificationService {
           'Notifications pour les rappels d’activités planifiées',
       importance: Importance.high,
       priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
+      icon: 'ic_notification',
       enableVibration: true,
       playSound: true,
       sound: RawResourceAndroidNotificationSound('notification_sound'),
     ),
     iOS: DarwinNotificationDetails(),
   );
-
-  static Future<void> showTestNotification() async {
-    if (defaultTargetPlatform == TargetPlatform.linux) return;
-    if (!_initialized) await init();
-    await _plugin.show(
-      id: DateTime.now().millisecondsSinceEpoch.remainder(100000),
-      title: 'Test Notification',
-      body: 'Les notifications fonctionnent !',
-      notificationDetails: _details,
-    );
-  }
 
   static Future<void> scheduleActivityNotification(Activity activity) async {
     if (defaultTargetPlatform == TargetPlatform.linux) return;

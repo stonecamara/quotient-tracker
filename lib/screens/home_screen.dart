@@ -355,14 +355,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   onTap: () => _showLanguageDialog(context, localeService),
                 ),
                 _SettingsTile(
-                  icon: Icons.notifications_active_outlined,
-                  title: t.isFrench ? 'Notifications' : 'Notifications',
-                  subtitle: t.isFrench
-                      ? 'Tester les rappels locaux'
-                      : 'Test local reminders',
-                  onTap: () => _testNotifications(context, t, provider),
-                ),
-                _SettingsTile(
                   icon: Icons.info_outline_rounded,
                   title: t.isFrench ? 'À propos de Quotient' : 'About Quotient',
                   subtitle: 'v1.0.0',
@@ -571,31 +563,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> _testNotifications(
-    BuildContext context,
-    AppLocalizations t,
-    ActivityProvider provider,
-  ) async {
-    final granted = await NotificationService.requestPermissions();
-    if (granted) {
-      await NotificationService.rescheduleAllNotifications(provider.activities);
-    }
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          granted
-              ? t.notificationTest
-              : (t.isFrench
-                    ? 'Permission de notification refusée'
-                    : 'Notification permission denied'),
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.textPrimary,
-      ),
-    );
-  }
-
   String _avatarAssetFor(String gender) {
     return gender == 'male'
         ? 'assets/avatar_male.png'
@@ -794,20 +761,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-          ),
-          _HeaderIcon(
-            icon: Icons.notifications_none_rounded,
-            onTap: () async {
-              await NotificationService.showTestNotification();
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(t.notificationTest),
-                  behavior: SnackBarBehavior.floating,
-                  backgroundColor: AppColors.textPrimary,
-                ),
-              );
-            },
           ),
         ],
       ),
@@ -1148,25 +1101,6 @@ class _SettingsTile extends StatelessWidget {
       trailing: const Icon(
         Icons.chevron_right_rounded,
         color: AppColors.textMuted,
-      ),
-    );
-  }
-}
-
-class _HeaderIcon extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _HeaderIcon({required this.icon, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton(
-      onPressed: onTap,
-      icon: Icon(icon, color: AppColors.textPrimary, size: 26),
-      style: IconButton.styleFrom(
-        backgroundColor: AppColors.purpleSoft,
-        shape: const CircleBorder(),
       ),
     );
   }

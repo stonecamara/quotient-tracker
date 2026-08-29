@@ -26,9 +26,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   late final List<Animation<double>> _fadeAnims;
   late final List<Animation<Offset>> _slideAnims;
 
-  // ── Animations flottantes pour les icônes ──
-  late final AnimationController _floatController;
-  late final Animation<double> _floatAnim;
+  // ── Animation de respiration douce pour les visuels ──
+  late final AnimationController _breathingController;
+  late final Animation<double> _breathingScale;
 
   // ── Animation de scale pour le logo ──
   late final AnimationController _logoController;
@@ -37,12 +37,15 @@ class _OnboardingScreenState extends State<OnboardingScreen>
   @override
   void initState() {
     super.initState();
-    _floatController = AnimationController(
+    _breathingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: const Duration(milliseconds: 2400),
     )..repeat(reverse: true);
-    _floatAnim = Tween<double>(begin: -8, end: 8).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    _breathingScale = Tween<double>(begin: 0.985, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _breathingController,
+        curve: Curves.easeInOutSine,
+      ),
     );
 
     _logoController = AnimationController(
@@ -51,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
     _logoScale = CurvedAnimation(
       parent: _logoController,
-      curve: Curves.elasticOut,
+      curve: Curves.easeOutBack,
     );
     _logoController.forward();
 
@@ -128,7 +131,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     _pageController.dispose();
     _nameController.dispose();
     _nameFocus.dispose();
-    _floatController.dispose();
+    _breathingController.dispose();
     _logoController.dispose();
     for (final c in _fadeControllers) {
       c.dispose();
@@ -259,10 +262,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ScaleTransition(
                 scale: _logoScale,
                 child: AnimatedBuilder(
-                  animation: _floatAnim,
+                  animation: _breathingScale,
                   builder: (context, _) {
-                    return Transform.translate(
-                      offset: Offset(0, _floatAnim.value),
+                    return Transform.scale(
+                      scale: _breathingScale.value,
                       child: Container(
                         width: 140,
                         height: 140,
@@ -342,10 +345,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             children: [
               // Logo plus petit
               AnimatedBuilder(
-                animation: _floatAnim,
+                animation: _breathingScale,
                 builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(0, _floatAnim.value * 0.5),
+                  return Transform.scale(
+                    scale: _breathingScale.value,
                     child: Container(
                       width: 80,
                       height: 80,
@@ -418,10 +421,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedBuilder(
-                animation: _floatAnim,
+                animation: _breathingScale,
                 builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(0, _floatAnim.value * 0.7),
+                  return Transform.scale(
+                    scale: _breathingScale.value,
                     child: const Icon(
                       Icons.language_rounded,
                       size: 80,
@@ -491,10 +494,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               AnimatedBuilder(
-                animation: _floatAnim,
+                animation: _breathingScale,
                 builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(0, _floatAnim.value),
+                  return Transform.scale(
+                    scale: _breathingScale.value,
                     child: Container(
                       width: 118,
                       height: 118,
@@ -581,10 +584,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             children: [
               // Avatar animé
               AnimatedBuilder(
-                animation: _floatAnim,
+                animation: _breathingScale,
                 builder: (context, _) {
-                  return Transform.translate(
-                    offset: Offset(0, _floatAnim.value),
+                  return Transform.scale(
+                    scale: _breathingScale.value,
                     child: Container(
                       width: 100,
                       height: 100,
