@@ -179,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen> {
       SliverToBoxAdapter(
         child: _buildSectionHeader(t, provider.todayActivities.length),
       ),
-      SliverToBoxAdapter(child: _buildFilters(t)),
       if (activities.isEmpty)
         SliverToBoxAdapter(child: _buildEmptyState(t))
       else
@@ -210,7 +209,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final isPast = selectedDate.isBefore(today);
-    final activities = provider.activitiesForDate(selectedDate);
+    var activities = provider.activitiesForDate(selectedDate);
+    if (_filter == 'done') {
+      activities = activities.where((a) => a.isCompletedOn(selectedDate)).toList();
+    } else if (_filter == 'pending') {
+      activities = activities.where((a) => !a.isCompletedOn(selectedDate)).toList();
+    }
     final isToday = selectedDate == today;
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
@@ -223,6 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       SliverToBoxAdapter(child: _buildDateStrip(dates, t)),
+      SliverToBoxAdapter(child: _buildFilters(t)),
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 22, 20, 8),
@@ -309,6 +314,12 @@ class _HomeScreenState extends State<HomeScreen> {
     final localeService = context.read<LocaleService>();
     final settings = Hive.box('settings');
     final gender = settings.get('userGender', defaultValue: 'female') as String;
+    final notifEnabled = settings.get('notificationsEnabled', defaultValue: true) as bool;
+    final totalTasks = provider.activities.length;
+    final avgQuotient = provider.quotient;
+    // Compute best streak: longest consecutive days with all tasks completed
+    final bestStreak = _computeBestStreak(provider);
+
     return [
       SliverToBoxAdapter(child: _buildHeader(userName, t)),
       SliverToBoxAdapter(
@@ -319,10 +330,25 @@ class _HomeScreenState extends State<HomeScreen> {
               : 'Personalize your Quotient experience.',
         ),
       ),
+      // ── Avatar card ──
       SliverToBoxAdapter(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
           child: _buildProfileAvatarCard(context, t, gender),
+        ),
+      ),
+      // ── Stats section ──
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: _buildStatsCard(t, totalTasks, bestStreak, avgQuotient),
+        ),
+      ),
+      // ── Identity section ──
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+          child: _SectionLabel(label: t.identitySection),
         ),
       ),
       SliverToBoxAdapter(
@@ -343,6 +369,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               children: [
                 _SettingsTile(
+                  icon: Icons.badge_rounded,
+                  title: t.editName,
+                  subtitle: userName.isEmpty ? t.askNameHint : userName,
+                  onTap: () => _showEditNameDialog(context, t),
+                ),
+                _SettingsTile(
                   icon: Icons.face_retouching_natural_rounded,
                   title: t.chooseAvatar,
                   subtitle: gender == 'male' ? t.genderMale : t.genderFemale,
@@ -353,6 +385,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   title: t.isFrench ? 'Langue' : 'Language',
                   subtitle: localeService.isFrench ? 'Français' : 'English',
                   onTap: () => _showLanguageDialog(context, localeService),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      // ── App section ──
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: _SectionLabel(label: t.appSection),
+        ),
+      ),
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppColors.bgCard,
+              borderRadius: BorderRadius.circular(22),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D24184A),
+                  blurRadius: 18,
+                  offset: Offset(0, 7),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.notifications_rounded,
+                  title: t.notificationsLabel,
+                  subtitle: t.notificationsHint,
+                  trailing: Switch(
+                    value: notifEnabled,
+                    activeThumbColor: AppColors.purple,
+                    onChanged: (value) async {
+                      await settings.put('notificationsEnabled', value);
+                      if (value) {
+                        await NotificationService.rescheduleAllNotifications(
+                          provider.activities,
+                        );
+                      } else {
+                        await NotificationService.cancelAllNotifications();
+                      }
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                  onTap: () {},
                 ),
                 _SettingsTile(
                   icon: Icons.info_outline_rounded,
@@ -375,6 +457,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+                _SettingsTile(
+                  icon: Icons.delete_outline_rounded,
+                  title: t.resetData,
+                  subtitle: t.resetDataHint,
+                  onTap: () => _showResetDialog(context, provider, t),
+                ),
               ],
             ),
           ),
@@ -382,6 +470,80 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       const SliverToBoxAdapter(child: SizedBox(height: 112)),
     ];
+  }
+
+  int _computeBestStreak(ActivityProvider provider) {
+    if (provider.activities.isEmpty) return 0;
+    final now = DateTime.now();
+    var streak = 0;
+    var bestStreak = 0;
+    // Check up to 365 days back
+    for (var i = 0; i < 365; i++) {
+      final date = DateTime(now.year, now.month, now.day - i);
+      final scheduled = provider.activitiesForDate(date);
+      if (scheduled.isEmpty) {
+        // If no tasks scheduled, don't break the streak but don't count it
+        continue;
+      }
+      final allDone = scheduled.every((a) => a.isCompletedOn(date));
+      if (allDone) {
+        streak++;
+        if (streak > bestStreak) bestStreak = streak;
+      } else if (i > 0) {
+        // Allow today (i==0) to be incomplete without breaking streak
+        break;
+      }
+    }
+    return bestStreak;
+  }
+
+  Widget _buildStatsCard(AppLocalizations t, int totalTasks, int bestStreak, int avgQuotient) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.purpleSoft,
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            t.myStats,
+            style: const TextStyle(
+              color: AppColors.purpleDark,
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: _StatItem(
+                  icon: Icons.list_alt_rounded,
+                  label: t.tasksCreated,
+                  value: '$totalTasks',
+                ),
+              ),
+              Expanded(
+                child: _StatItem(
+                  icon: Icons.local_fire_department_rounded,
+                  label: t.bestStreak,
+                  value: '$bestStreak ${t.days}',
+                ),
+              ),
+              Expanded(
+                child: _StatItem(
+                  icon: Icons.auto_graph_rounded,
+                  label: t.avgQuotient,
+                  value: '$avgQuotient%',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTabTitle(String title, String subtitle) {
@@ -627,6 +789,46 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _showEditNameDialog(
+    BuildContext context,
+    AppLocalizations t,
+  ) async {
+    final settings = Hive.box('settings');
+    final currentName = settings.get('userName', defaultValue: '') as String;
+    final controller = TextEditingController(text: currentName);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => _EditNameDialog(
+        controller: controller,
+        t: t,
+      ),
+    );
+    // Delay disposal so the dialog animation can finish referencing the controller.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.dispose();
+    });
+    if (result != null && result.isNotEmpty) {
+      await settings.put('userName', result);
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            setState(() {});
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(t.nameUpdated),
+                backgroundColor: AppColors.purple,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            );
+          }
+        });
+      }
+    }
+  }
+
   Future<void> _showLanguageDialog(
     BuildContext context,
     LocaleService localeService,
@@ -650,6 +852,57 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
     if (selected != null) await localeService.setLocale(selected);
+  }
+
+  Future<void> _showResetDialog(
+    BuildContext context,
+    ActivityProvider provider,
+    AppLocalizations t,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.bgCard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+        title: Text(
+          t.resetData,
+          style: const TextStyle(color: AppColors.textPrimary),
+        ),
+        content: Text(
+          t.resetDataConfirm,
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              t.cancel,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.danger),
+            child: Text(t.reset),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      for (final activity in provider.activities.toList()) {
+        await provider.deleteActivity(activity.id);
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(t.resetData),
+            backgroundColor: AppColors.purple,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildProfileAvatarCard(
@@ -1008,7 +1261,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onTap: () => setState(() => _selectedNav = 2),
             ),
             _NavItem(
-              icon: Icons.group_rounded,
+              icon: Icons.person_rounded,
               selected: _selectedNav == 3,
               onTap: () => setState(() => _selectedNav = 3),
             ),
@@ -1064,12 +1317,14 @@ class _SettingsTile extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final Widget? trailing;
 
   const _SettingsTile({
     required this.icon,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.trailing,
   });
 
   @override
@@ -1094,11 +1349,11 @@ class _SettingsTile extends StatelessWidget {
           fontWeight: FontWeight.w700,
         ),
       ),
-      subtitle: Text(
+      subtitle: subtitle.isNotEmpty ? Text(
         subtitle,
         style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
-      ),
-      trailing: const Icon(
+      ) : null,
+      trailing: trailing ?? const Icon(
         Icons.chevron_right_rounded,
         color: AppColors.textMuted,
       ),
@@ -1131,6 +1386,55 @@ class _CountBadge extends StatelessWidget {
   }
 }
 
+class _EditNameDialog extends StatelessWidget {
+  final TextEditingController controller;
+  final AppLocalizations t;
+
+  const _EditNameDialog({required this.controller, required this.t});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppColors.bgCard,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+      title: Text(
+        t.editName,
+        style: const TextStyle(color: AppColors.textPrimary),
+      ),
+      content: TextField(
+        controller: controller,
+        textCapitalization: TextCapitalization.words,
+        autofocus: true,
+        style: const TextStyle(color: AppColors.textPrimary, fontSize: 16),
+        decoration: InputDecoration(
+          hintText: t.onboardingNameHint,
+          hintStyle: const TextStyle(color: AppColors.textMuted),
+          filled: true,
+          fillColor: AppColors.purpleSoft,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(
+            t.cancel,
+            style: const TextStyle(color: AppColors.textSecondary),
+          ),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          style: FilledButton.styleFrom(backgroundColor: AppColors.purple),
+          child: Text(t.save),
+        ),
+      ],
+    );
+  }
+}
+
 class _NavItem extends StatelessWidget {
   final IconData icon;
   final bool selected;
@@ -1152,6 +1456,66 @@ class _NavItem extends StatelessWidget {
         size: 24,
       ),
       tooltip: selected ? 'Selected' : null,
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String label;
+  const _SectionLabel({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+          color: AppColors.textMuted,
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _StatItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.purple, size: 22),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: const TextStyle(
+            color: AppColors.purpleDark,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          label,
+          style: const TextStyle(
+            color: AppColors.purpleDark,
+            fontSize: 10,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 }

@@ -172,6 +172,27 @@ class AppLocalizations {
     const en = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     return en[index];
   }
+
+  // ── Profile ──
+  String get editName => _fr ? 'Modifier le prénom' : 'Edit name';
+  String get notificationsLabel => _fr ? 'Notifications' : 'Notifications';
+  String get notificationsHint => _fr ? 'Rappels d\'activités' : 'Activity reminders';
+  String get resetData => _fr ? 'Réinitialiser les données' : 'Reset data';
+  String get resetDataHint => _fr ? 'Supprimer toutes les tâches et recommencer' : 'Delete all tasks and start over';
+  String get resetDataConfirm => _fr
+      ? 'Voulez-vous vraiment supprimer toutes les tâches ? Cette action est irréversible.'
+      : 'Are you sure you want to delete all tasks? This action cannot be undone.';
+  String get reset => _fr ? 'Réinitialiser' : 'Reset';
+  String get nameUpdated => _fr ? 'Prénom mis à jour !' : 'Name updated!';
+  String get viewHistory => _fr ? 'Voir l\'historique complet' : 'View full history';
+  String get identitySection => _fr ? 'Identité' : 'Identity';
+  String get appSection => _fr ? 'Application' : 'Application';
+  String get myStats => _fr ? 'Mes statistiques' : 'My stats';
+  String get tasksCreated => _fr ? 'Tâches créées' : 'Tasks created';
+  String get bestStreak => _fr ? 'Meilleur streak' : 'Best streak';
+  String get avgQuotient => _fr ? 'Quotient moyen' : 'Avg quotient';
+  String get days => _fr ? 'jours' : 'days';
+  String get askNameHint => _fr ? 'Appuyez ici pour entrer votre prénom' : 'Tap here to enter your name';
 }
 
 // ── InheritedWidget pour propager les traductions ──
